@@ -1,0 +1,38 @@
+# Dependências
+node_modules/
+
+# Builds
+dist/
+build/
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editor/IDE
+.vscode/
+.idea/
+
+# Ambiente
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Cache de pacotes
+.cache/
+.parcel-cache/
+
+# Outras pastas temporárias
+tmp/
+temp/
+
+# Arquivos de testes gerados
+coverage/
