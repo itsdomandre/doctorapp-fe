@@ -2,6 +2,7 @@ import api from "@/lib/api";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/store/auth";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -46,7 +47,7 @@ export default function Login() {
       onSubmit={handleSubmit}
       className="max-w-sm mx-auto mt-20 p-6 border rounded space-y-4 bg-white shadow"
     >
-      <h1 className="text-xl font-semibold">Entrar</h1>
+      <h1 className="text-xl font-semibold">Welcome to DoctorApp</h1>
 
       <div>
         <label className="block text-sm">Email</label>
@@ -76,6 +77,19 @@ export default function Login() {
       >
         Entrar
       </button>
+
+      <p className="text-sm text-center">
+        Não tem conta?{" "}
+        <Link to="/register" className="text-blue-600 hover:underline">
+          Criar conta
+        </Link>
+      </p>
+      <p className="text-sm text-center">
+        Esqueceu a sua senha?{" "}
+        <Link to="/forgot-password" className="text-blue-600 hover:underline">
+          Recuperar acesso
+        </Link>
+      </p>
     </form>
   );
 }

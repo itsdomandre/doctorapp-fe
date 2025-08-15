@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 node_modules/
 dist/
 build/
@@ -5,13 +6,50 @@ build/
 Thumbs.db
 .vscode/
 .idea/
+=======
+# Dependências
+node_modules/
+
+# Builds
+dist/
+build/
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editor/IDE
+.vscode/
+.idea/
+
+# Ambiente
+>>>>>>> f8d1a87cf1f3ef54b020564fba29b9ab678e2840
 .env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
+<<<<<<< HEAD
 .cache/
 .parcel-cache/
 tmp/
 temp/
+=======
+
+# Cache de pacotes
+.cache/
+.parcel-cache/
+
+# Outras pastas temporárias
+tmp/
+temp/
+
+# Arquivos de testes gerados
+>>>>>>> f8d1a87cf1f3ef54b020564fba29b9ab678e2840
 coverage/
