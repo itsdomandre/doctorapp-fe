@@ -1,140 +1,229 @@
-import { useEffect, useMemo, useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchMyAppointments, cancelAppointment } from "@/lib/api/appointments";
-import { Appointment } from "@/types/appointment";
+import { useEffect, useState } from "react";
+import { fetchMyAppointments } from "@/lib/appointment";
+import type { AppointmentDTO } from "@/types/appointment";
 import StatusBadge from "@/components/StatusBadge";
-import Pagination from "@/components/Pagination";
+import { Link, useNavigate } from "react-router-dom";
+import { PROCEDURE_LABEL } from "@/types/appointment";
 
+type AnyDate =
+  | string
+  | number[]
+  | { year: number; month: number; day: number; hour?: number; minute?: number; second?: number }
+  | null
+  | undefined;
+
+/* ---------------- Date helpers ---------------- */
+function toDate(raw: AnyDate): Date | null {
+  if (!raw) return null;
+  if (typeof raw === "string") {
+    const n = raw.includes("T") ? raw : raw.replace(" ", "T");
+    const d = new Date(n);
+    return isNaN(d.getTime()) ? null : d;
+  }
+  if (Array.isArray(raw)) {
+    const [y, m, d, hh = 0, mm = 0, ss = 0] = raw;
+    if (typeof y === "number" && typeof m === "number" && typeof d === "number") {
+      return new Date(y, m - 1, d, hh, mm, ss);
+    }
+    return null;
+  }
+  if (typeof raw === "object" && "year" in raw && "month" in raw && "day" in raw) {
+    const { year, month, day, hour = 0, minute = 0, second = 0 } = raw as any;
+    return new Date(year, month - 1, day, hour, minute, second);
+  }
+  return null;
+}
+
+function formatDayTime(raw: AnyDate) {
+  const d = toDate(raw);
+  if (!d) return { day: "—", time: "—" };
+  return {
+    day: d.toLocaleDateString(undefined, { year: "numeric", month: "2-digit", day: "2-digit" }),
+    time: d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", hour12: false }),
+  };
+}
+
+/* ---------------- Procedure helpers ---------------- */
+function pickProcedureRaw(a: any) {
+  const p = a?.procedure;
+
+  // 1) string direta (enum serializado como texto)
+  if (typeof p === "string" && p.trim()) return p;
+
+  // 2) número (ordinal do enum) -> tenta resolver pela posição das chaves
+  if (typeof p === "number" && Number.isInteger(p)) {
+    const keys = Object.keys(PROCEDURE_LABEL); // ["AVALIACAO_CLINICA", ...]
+    return keys[p] ?? String(p);
+  }
+
+  // 3) objeto (Jackson com enum em OBJETO)
+  if (p && typeof p === "object") {
+    // cobre formatos comuns: { label, name, value, key, code, id, type }
+    // prioriza 'label' se existir
+    return (
+      (p as any).label ??
+      (p as any).name ??
+      (p as any).value ??
+      (p as any).key ??
+      (p as any).code ??
+      (p as any).id ??
+      (p as any).type ??
+      null
+    );
+  }
+
+  // 4) nomes alternativos usados por alguns DTOs
+  return (
+    a?.procedureLabel ??
+    a?.procedure_label ??
+    a?.procedureName ??
+    a?.procedure_name ??
+    a?.type ??
+    a?.procedureType ??
+    null
+  );
+}
+
+// resolve o label final (usa mapa oficial; senão humaniza)
+function resolveProcedureLabel(raw: unknown): string {
+  const s = String(raw ?? "").trim();
+  if (!s) return "Procedimento";
+
+  // já é um label oficial?
+  const officialLabels = Object.values(PROCEDURE_LABEL) as string[];
+  if (officialLabels.includes(s)) return s;
+
+  // é a CHAVE do enum? (ex.: "AVALIACAO_CLINICA")
+  // @ts-ignore
+  if (PROCEDURE_LABEL[s]) {
+    // @ts-ignore
+    return PROCEDURE_LABEL[s];
+  }
+
+  // fallback: humaniza "AVALIACAO_CLINICA" -> "Avaliacao clinica"
+  return s
+    .toLowerCase()
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+// ⚠️ teu DTO envia 'dateTime'
+function pickDateRaw(a: any): AnyDate {
+  return a?.dateTime ?? a?.appointmentDate ?? a?.appointment_date ?? a?.datetime ?? a?.date_time ?? null;
+}
+
+/* ---------------- Component ---------------- */
 export default function MyAppointments() {
-  const qc = useQueryClient();
-  const [page, setPage] = useState(0);
-  const [size] = useState(10);
-  const [status, setStatus] = useState<string>("ALL");
-
-  const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ["myAppointments", { page, size, status }],
-    queryFn: () => fetchMyAppointments({ page, size, status }),
-    keepPreviousData: true,
-  });
-
-  // cancelar (opcional)
-  const cancelMut = useMutation({
-    mutationFn: (id: string) => cancelAppointment(id),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["myAppointments"] });
-    },
-  });
-
+  const [items, setItems] = useState<AppointmentDTO[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [openId, setOpenId] = useState<string | number | null>(null);
+  const navigate = useNavigate();
   useEffect(() => {
-    // sempre que mudar status, volta página 0
-    setPage(0);
-  }, [status]);
+    (async () => {
+      try {
+        const data = await fetchMyAppointments();
 
-  const rows = useMemo(() => data?.content ?? [], [data]);
+        // ordena por data; sem data vai ao fim
+        (data as any[]).sort((a, b) => {
+          const da = toDate(pickDateRaw(a))?.getTime() ?? Number.POSITIVE_INFINITY;
+          const db = toDate(pickDateRaw(b))?.getTime() ?? Number.POSITIVE_INFINITY;
+          return da - db;
+        });
+
+        setItems(data as any);
+      } catch (e: any) {
+        if (e?.response?.status === 401) {
+          navigate("/login", { replace: true });
+          return;
+        }
+        setError(e?.response?.data?.message ?? "Não foi possível carregar seus agendamentos.");
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [navigate]);
+
+  if (loading) {
+    return (
+      <div className="p-6 max-w-4xl space-y-3">
+        <div className="flex items-center justify-between mb-4">
+          <div className="h-6 w-48 rounded bg-gray-200 animate-pulse" />
+          <div className="h-8 w-28 rounded bg-gray-200 animate-pulse" />
+        </div>
+        {[...Array(3)].map((_, i) => (
+          <div key={i} className="h-16 rounded-2xl bg-gray-200 animate-pulse" />
+        ))}
+      </div>
+    );
+  }
+
+  if (error) return <div className="p-6 text-red-600">{error}</div>;
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Meus Appointments</h1>
-        <a
-          href="/app/appointments/new"
-          className="rounded-xl border px-3 py-2 hover:bg-gray-50"
+    <div className="p-6 max-w-4xl">
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-xl font-semibold">Meus agendamentos</h1>
+        <Link
+          to="/app/appointments/new"
+          className="inline-flex items-center gap-2 rounded-xl bg-black text-white px-4 py-2 text-sm hover:opacity-90"
         >
-          Novo Appointment
-        </a>
+          <span className="text-base">＋</span>
+          Novo
+        </Link>
       </div>
 
-      {/* Filtros */}
-      <div className="flex flex-wrap items-center gap-3">
-        <select
-          value={status}
-          onChange={(e) => setStatus(e.target.value)}
-          className="rounded-xl border px-3 py-2"
-        >
-          <option value="ALL">Todos</option>
-          <option value="PENDING">Pendentes</option>
-          <option value="APPROVED">Aprovados</option>
-          <option value="REJECTED">Rejeitados</option>
-          <option value="CANCELLED">Cancelados</option>
-        </select>
-        <button
-          onClick={() => refetch()}
-          className="rounded-xl border px-3 py-2 hover:bg-gray-50"
-        >
-          Atualizar
-        </button>
-      </div>
+      {items.length === 0 ? (
+        <div className="rounded-2xl border p-6 text-center">
+          <p className="text-gray-600 mb-4">Você ainda não possui agendamentos.</p>
+          <button
+            onClick={() => navigate("/app/appointments/new")}
+            className="rounded-xl border px-4 py-2 text-sm hover:bg-gray-100"
+          >
+            Agendar agora
+          </button>
+        </div>
+      ) : (
+        <ul className="space-y-3">
+          {(items as any[]).map((a) => {
+            const procLabel = resolveProcedureLabel(pickProcedureRaw(a));
+            const { day, time } = formatDayTime(pickDateRaw(a));
+            const isOpen = openId === a.id;
 
-      {/* Tabela */}
-      <div className="rounded-2xl border bg-white shadow-sm overflow-x-auto">
-        <table className="min-w-full divide-y">
-          <thead className="bg-gray-50 text-left text-sm text-gray-600">
-            <tr>
-              <th className="px-4 py-2">Data</th>
-              <th className="px-4 py-2">Hora</th>
-              <th className="px-4 py-2">Especialidade</th>
-              <th className="px-4 py-2">Motivo</th>
-              <th className="px-4 py-2">Status</th>
-              <th className="px-4 py-2 w-1">Ações</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y">
-            {isLoading && (
-              <tr>
-                <td className="px-4 py-6 text-center text-gray-500" colSpan={6}>
-                  Carregando...
-                </td>
-              </tr>
-            )}
-            {isError && (
-              <tr>
-                <td className="px-4 py-6 text-center text-red-600" colSpan={6}>
-                  Erro ao carregar. Tente novamente.
-                </td>
-              </tr>
-            )}
-            {!isLoading && !isError && rows.length === 0 && (
-              <tr>
-                <td className="px-4 py-6 text-center text-gray-500" colSpan={6}>
-                  Nenhum appointment encontrado.
-                </td>
-              </tr>
-            )}
-            {rows.map((a: Appointment) => {
-              const date = a.date || a.datetime?.slice(0, 10) || "";
-              const time = a.time || a.datetime?.slice(11, 16) || "";
-              return (
-                <tr key={a.id}>
-                  <td className="px-4 py-2">{date}</td>
-                  <td className="px-4 py-2">{time}</td>
-                  <td className="px-4 py-2">{a.specialty ?? "-"}</td>
-                  <td className="px-4 py-2">{a.reason ?? "-"}</td>
-                  <td className="px-4 py-2"><StatusBadge status={a.status} /></td>
-                  <td className="px-4 py-2 text-right">
-                    {(a.status === "PENDING" || a.status === "APPROVED") && (
-                      <button
-                        onClick={() => cancelMut.mutate(a.id)}
-                        className="rounded-lg border px-2 py-1 text-sm hover:bg-gray-50"
-                      >
-                        Cancelar
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+            return (
+              <li key={a.id} className="border rounded-2xl p-4">
+                <button
+                  type="button"
+                  aria-expanded={isOpen}
+                  onClick={() => setOpenId(isOpen ? null : (a.id as any))}
+                  className="w-full text-left flex items-center justify-between gap-3"
+                >
+                  <span className="font-medium">{procLabel}</span>
+                  <span className="text-xs text-gray-500">{isOpen ? "Fechar" : "Ver detalhes"}</span>
+                </button>
 
-      {/* Paginação */}
-      <div className="flex items-center justify-end">
-        <Pagination
-          page={data?.number ?? 0}
-          totalPages={data?.totalPages ?? 1}
-          onPage={setPage}
-        />
-      </div>
+                {isOpen && (
+                  <div className="mt-3 pt-3 border-t">
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm text-gray-700">
+                        <div>
+                          <span className="font-medium">Quando:</span> {day} às {time}
+                        </div>
+                        {a.notes && (
+                          <div className="mt-1">
+                            <span className="font-medium">Observações:</span> {a.notes}
+                          </div>
+                        )}
+                      </div>
+                      <StatusBadge status={(a as any).status} />
+                    </div>
+                  </div>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </div>
   );
 }

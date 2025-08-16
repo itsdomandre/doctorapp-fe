@@ -1,77 +1,132 @@
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
-import { createAppointment, CreateAppointmentInput } from "@/lib/api/appointments";
+// src/pages/user/NewAppointment.tsx
+import { useEffect, useState } from "react";
+import { fetchSlots, createAppointment } from "@/lib/appointment";
+import { PROCEDURES, PROCEDURE_LABEL, Procedure } from "@/types/appointment";
 import { useNavigate } from "react-router-dom";
-
-const schema = z.object({
-  date: z.string().min(10, "Informe a data"),
-  time: z.string().optional(),
-  specialty: z.string().min(2, "Informe a especialidade"),
-  reason: z.string().min(3, "Descreva o motivo"),
-});
-type FormData = z.infer<typeof schema>;
-
 export default function NewAppointment() {
   const navigate = useNavigate();
+  const [date, setDate] = useState("");
+  const [slots, setSlots] = useState<string[]>([]);
+  const [slot, setSlot] = useState("");
+  const [procedure, setProcedure] = useState<Procedure | "">("");
+  const [notes, setNotes] = useState("");
+  const [loadingSlots, setLoadingSlots] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const [ok, setOk] = useState("");
 
-  const { register, handleSubmit, formState: { errors, isSubmitting }, reset } =
-    useForm<FormData>({ resolver: zodResolver(schema) });
+  useEffect(() => {
+    (async () => {
+      if (!date) return;
+      setLoadingSlots(true);
+      setError("");
+      try {
+        const list = await fetchSlots(date);
+        // normaliza para HH:mm
+        const normalized = list.map((t) => (t.length >= 5 ? t.slice(0, 5) : t));
+        setSlots(normalized);
+        setSlot("");
+      } catch (e: any) {
+        setError(e?.response?.data?.message ?? "Falha ao carregar horários.");
+      } finally {
+        setLoadingSlots(false);
+      }
+    })();
+  }, [date]);
 
-  const mutation = useMutation({
-    mutationFn: (payload: CreateAppointmentInput) => createAppointment(payload),
-    onSuccess: () => {
-      reset();
-      navigate("/app/appointments", { replace: true });
-    },
-  });
-
-  const onSubmit = (data: FormData) => {
-    mutation.mutate({
-      date: data.date,
-      time: data.time,
-      specialty: data.specialty,
-      reason: data.reason,
-    });
-  };
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!date || !slot || !procedure) {
+      setError("Selecione data, horário e procedimento.");
+      return;
+    }
+    setSubmitting(true);
+    setError("");
+    try {
+      const dateTime = `${date}T${slot}:00`; // LocalDateTime que o backend espera
+      await createAppointment({ dateTime, procedure: procedure as Procedure, notes });
+      setOk("Pedido enviado! Você receberá confirmação em até 24h.");
+      setTimeout(() => navigate("/app/appointments"), 1200);
+    } catch (e: any) {
+      setError(e?.response?.data?.message ?? "Não foi possível enviar o pedido.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-xl font-semibold">Novo Appointment</h1>
+    <div className="p-6">
+      <h1 className="text-xl font-semibold mb-4">Novo agendamento</h1>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4 max-w-xl">
-        <div>
-          <label className="text-sm">Data</label>
-          <input type="date" {...register("date")} className="mt-1 w-full rounded-xl border px-3 py-2" />
-          {errors.date && <div className="text-xs text-red-600 mt-1">{errors.date.message}</div>}
+      <form onSubmit={onSubmit} className="space-y-4 max-w-xl">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <label className="flex flex-col gap-1">
+            <span className="text-sm text-gray-600">Data</span>
+            <input
+              type="date"
+              className="border rounded-xl px-3 py-2"
+              min={new Date().toISOString().slice(0, 10)}
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              required
+            />
+          </label>
+
+          <label className="flex flex-col gap-1">
+            <span className="text-sm text-gray-600">Horário</span>
+            <select
+              className="border rounded-xl px-3 py-2 disabled:opacity-50"
+              disabled={!date || loadingSlots}
+              value={slot}
+              onChange={(e) => setSlot(e.target.value)}
+              required
+            >
+              <option value="">{loadingSlots ? "Carregando..." : "Selecione"}</option>
+              {slots.map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
+          </label>
         </div>
 
-        <div>
-          <label className="text-sm">Hora (opcional)</label>
-          <input type="time" {...register("time")} className="mt-1 w-full rounded-xl border px-3 py-2" />
-        </div>
+        <label className="flex flex-col gap-1">
+          <span className="text-sm text-gray-600">Procedimento</span>
+          <select
+            className="border rounded-xl px-3 py-2"
+            value={procedure}
+            onChange={(e) => setProcedure(e.target.value as Procedure)}
+            required
+          >
+            <option value="">Selecione</option>
+            {PROCEDURES.map((p) => (
+              <option key={p} value={p}>{PROCEDURE_LABEL[p]}</option>
+            ))}
+          </select>
+        </label>
 
-        <div>
-          <label className="text-sm">Especialidade</label>
-          <input type="text" {...register("specialty")} className="mt-1 w-full rounded-xl border px-3 py-2" placeholder="Clínica geral, Cardiologia..." />
-          {errors.specialty && <div className="text-xs text-red-600 mt-1">{errors.specialty.message}</div>}
-        </div>
+        <label className="flex flex-col gap-1">
+          <span className="text-sm text-gray-600">Observações (opcional)</span>
+          <textarea
+            className="border rounded-xl px-3 py-2 min-h-[92px]"
+            placeholder="Informações adicionais, alergias, etc."
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+          />
+        </label>
 
-        <div>
-          <label className="text-sm">Motivo</label>
-          <textarea {...register("reason")} className="mt-1 w-full rounded-xl border px-3 py-2" rows={3} placeholder="Descreva brevemente os sintomas ou motivo do agendamento" />
-          {errors.reason && <div className="text-xs text-red-600 mt-1">{errors.reason.message}</div>}
-        </div>
+        {error && <p className="text-sm text-red-600">{error}</p>}
+        {ok && <p className="text-sm text-green-700">{ok}</p>}
 
-        <div className="flex gap-2">
-          <button disabled={isSubmitting || mutation.isPending} className="rounded-xl border px-4 py-2 disabled:opacity-50">
-            {mutation.isPending ? "Enviando..." : "Solicitar"}
-          </button>
-          <a href="/app/appointments" className="rounded-xl border px-4 py-2">
+        <div className="flex justify-end gap-2">
+          <button type="button" className="px-4 py-2 rounded-xl border" onClick={() => navigate(-1)}>
             Cancelar
-          </a>
+          </button>
+          <button type="submit" disabled={submitting} className="px-4 py-2 rounded-xl bg-black text-white disabled:opacity-50">
+            {submitting ? "Enviando..." : "Solicitar"}
+          </button>
         </div>
+
+        <p className="mt-2 text-xs text-gray-500">Cada atendimento é de 1 hora. O pedido ficará em <b>REQUESTED</b> até aprovação.</p>
       </form>
     </div>
   );

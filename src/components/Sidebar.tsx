@@ -1,4 +1,3 @@
-// src/components/Sidebar.tsx
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "@/store/auth";
 
@@ -12,7 +11,8 @@ export default function Sidebar({ open = true }: Props) {
   const navigate = useNavigate();
   const role = (user?.role || "USER") as "ADMIN" | "USER";
 
-  const initials = (email?: string) => (email ? email.split("@")[0].slice(0, 2).toUpperCase() : "U");
+  const initials = (email?: string) =>
+    (email ? email.split("@")[0].slice(0, 2).toUpperCase() : "U");
 
   async function handleLogout() {
     await logout();
@@ -53,7 +53,10 @@ export default function Sidebar({ open = true }: Props) {
             <NavLink to="/app" end className={({ isActive }) => `${linkBase} ${isActive ? linkActive : ""}`}>
               Dashboard
             </NavLink>
-            <NavLink to="/app/appointments" className={({ isActive }) => `${linkBase} ${isActive ? linkActive : ""}`}>
+            <NavLink
+              to="/app/appointments"
+              className={({ isActive }) => `${linkBase} ${isActive ? linkActive : ""}`}
+            >
               Meus Appointments
             </NavLink>
           </>
@@ -61,7 +64,6 @@ export default function Sidebar({ open = true }: Props) {
       </nav>
 
       <hr className="my-4 border-gray-200" />
-
       <button onClick={handleLogout} className="w-full rounded-xl border px-3 py-2 text-sm hover:bg-gray-100">
         Sair
       </button>
