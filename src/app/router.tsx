@@ -9,6 +9,7 @@ import RegisterSuccess from "@/pages/RegisterSuccess";
 import ForgotPassword from "@/pages/ForgotPassword";
 import ForgotPasswordSent from "@/pages/ForgotPasswordSent";
 import ResetPassword from "@/pages/ResetPassword";
+import ActivateAccount from "@/pages/ActivateAccount";
 
 const Login = lazy(() => import("@/pages/Login"));
 const Register = lazy(() => import("@/pages/Register"));
@@ -35,6 +36,7 @@ export const router = createBrowserRouter([
   { path: "/forgot-password/sent", element: <ForgotPasswordSent /> },
   { path: "/reset-password/:token", element: <ResetPassword /> },
   { path: "/reset-password", element: <ResetPassword /> },
+  { path: "/activate", element: <ActivateAccount /> },
 
   // Protegidas
   {

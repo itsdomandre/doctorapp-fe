@@ -126,7 +126,7 @@ export default function NewAppointment() {
           </button>
         </div>
 
-        <p className="mt-2 text-xs text-gray-500">Cada atendimento é de 1 hora. O pedido ficará em <b>REQUESTED</b> até aprovação.</p>
+        <p className="mt-2 text-xs text-gray-500">Cada atendimento é de 1 hora. O pedido ficará em <b>SOLICITADO</b> até aprovação.</p>
       </form>
     </div>
   );

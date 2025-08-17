@@ -1,9 +1,9 @@
 export type AppointmentStatus =
-  | "REQUESTED"
-  | "APPROVED"
-  | "REJECTED"
-  | "CANCELLED"
-  | "COMPLETED";
+  | "SOLICITADO"
+  | "APROVADO"
+  | "REJEITADO"
+  | "CANCELADO"
+  | "COMPLETO";
 
 export type Procedure =
   | "AVALIACAO_CLINICA"

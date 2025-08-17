@@ -30,6 +30,12 @@ export default function Register() {
       birthdate: String(fd.get("birthdate") || ""),
     };
     const confirmPassword = String(fd.get("confirmPassword") || "");
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailRegex.test(payload.email)) {
+      setError("Endereço de e-mail inválido.");
+      return;
+    }
 
     if (payload.password.length < 6) {
       setError("A senha deve ter pelo menos 6 caracteres.");
@@ -60,6 +66,7 @@ export default function Register() {
 
   return (
     <form
+      noValidate
       onSubmit={handleSubmit}
       className="max-w-md mx-auto mt-16 p-6 border rounded bg-white shadow space-y-4"
     >
