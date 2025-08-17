@@ -1,13 +1,15 @@
+// src/lib/api.ts
 import axios, { AxiosHeaders } from "axios";
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL ?? "http://localhost:8080",
-  withCredentials: true,
+  withCredentials: true, // permite cookie HttpOnly
 });
+
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
 
-  // Garante uma instância 'AxiosHeaders' mesmo que viesse um objeto plain
+  // garante AxiosHeaders
   const headers =
     config.headers instanceof AxiosHeaders
       ? config.headers
@@ -19,7 +21,7 @@ api.interceptors.request.use((config) => {
 
   config.headers = headers;
 
-  // (opcional) log de debug
+  // (opcional) log
   const full = `${config.baseURL ?? ""}${config.url ?? ""}`;
   console.debug("[API] ->", config.method?.toUpperCase(), full, { params: config.params });
 
@@ -30,8 +32,21 @@ api.interceptors.response.use(
   (res) => res,
   (err) => {
     const { config, response } = err || {};
-    const full = `${config?.baseURL ?? ""}${config?.url ?? ""}`;
-    console.error("[API] x", config?.method?.toUpperCase(), full, "=>", response?.status, response?.data);
+    const isMe = config?.url?.includes("/api/auth/me");
+    const hasToken = !!localStorage.getItem("token");
+
+    // não poluir console com 401 esperado do /me sem token
+    if (!(isMe && !hasToken && response?.status === 401)) {
+      const full = `${config?.baseURL ?? ""}${config?.url ?? ""}`;
+      console.error(
+        "[API] x",
+        config?.method?.toUpperCase(),
+        full,
+        "=>",
+        response?.status,
+        response?.data
+      );
+    }
     return Promise.reject(err);
   }
 );

@@ -1,15 +1,17 @@
+// src/app/router.tsx
 import { createBrowserRouter } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import ProtectedRoute from "@/routes/ProtectedRoute";
 import RoleRoute from "@/routes/RoleRoute";
 import HomeRedirect from "@/routes/HomeRedirect";
-import AppLayout from "@/layouts/AppLayout";
+import AppShell from "@/components/AppShell";
 
 import RegisterSuccess from "@/pages/RegisterSuccess";
 import ForgotPassword from "@/pages/ForgotPassword";
 import ForgotPasswordSent from "@/pages/ForgotPasswordSent";
 import ResetPassword from "@/pages/ResetPassword";
 import ActivateAccount from "@/pages/ActivateAccount";
+import MyAppointments from "@/pages/user/MyAppointments";
 
 const Login = lazy(() => import("@/pages/Login"));
 const Register = lazy(() => import("@/pages/Register"));
@@ -18,11 +20,13 @@ const Forbidden = lazy(() => import("@/pages/Forbidden"));
 const AdminDashboard = lazy(() => import("@/pages/admin/AdminDashboard"));
 const UserDashboard = lazy(() => import("@/pages/user/UserDashboard"));
 const NewAppointment = lazy(() => import("@/pages/user/NewAppointment"));
-const MyAppointments = lazy(() => import("@/pages/user/MyAppointments"));
 
 const withSuspense = (el: React.ReactElement) => (
   <Suspense fallback={<div className="p-6">Carregando…</div>}>{el}</Suspense>
 );
+
+// helper para envolver páginas protegidas no shell responsivo
+const wrapShell = (el: React.ReactElement) => withSuspense(<AppShell>{el}</AppShell>);
 
 export const router = createBrowserRouter([
   { path: "/", element: withSuspense(<HomeRedirect />) },
@@ -46,14 +50,7 @@ export const router = createBrowserRouter([
       {
         element: <RoleRoute allowed={["ADMIN"]} />,
         children: [
-          {
-            path: "/admin",
-            element: withSuspense(
-              <AppLayout>
-                <AdminDashboard />
-              </AppLayout>
-            ),
-          },
+          { path: "/admin", element: wrapShell(<AdminDashboard />) },
         ],
       },
 
@@ -61,30 +58,9 @@ export const router = createBrowserRouter([
       {
         element: <RoleRoute allowed={["USER", "ADMIN"]} />,
         children: [
-          {
-            path: "/app",
-            element: withSuspense(
-              <AppLayout>
-                <UserDashboard />
-              </AppLayout>
-            ),
-          },
-          {
-            path: "/app/appointments",
-            element: withSuspense(
-              <AppLayout>
-                <MyAppointments />
-              </AppLayout>
-            ),
-          },
-          {
-            path: "/app/appointments/new",
-            element: withSuspense(
-              <AppLayout>
-                <NewAppointment />
-              </AppLayout>
-            ),
-          },
+          { path: "/app", element: wrapShell(<UserDashboard />) },
+          { path: "/app/appointments", element: wrapShell(<MyAppointments />) },
+          { path: "/app/appointments/new", element: wrapShell(<NewAppointment />) },
         ],
       },
     ],

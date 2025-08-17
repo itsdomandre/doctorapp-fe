@@ -1,3 +1,4 @@
+// src/pages/user/MyAppointments.tsx
 import { useEffect, useState } from "react";
 import { fetchMyAppointments } from "@/lib/appointment";
 import type { AppointmentDTO } from "@/types/appointment";
@@ -46,20 +47,12 @@ function formatDayTime(raw: AnyDate) {
 /* ---------------- Procedure helpers ---------------- */
 function pickProcedureRaw(a: any) {
   const p = a?.procedure;
-
-  // 1) string direta (enum serializado como texto)
   if (typeof p === "string" && p.trim()) return p;
-
-  // 2) número (ordinal do enum) -> tenta resolver pela posição das chaves
   if (typeof p === "number" && Number.isInteger(p)) {
-    const keys = Object.keys(PROCEDURE_LABEL); // ["AVALIACAO_CLINICA", ...]
+    const keys = Object.keys(PROCEDURE_LABEL);
     return keys[p] ?? String(p);
   }
-
-  // 3) objeto (Jackson com enum em OBJETO)
   if (p && typeof p === "object") {
-    // cobre formatos comuns: { label, name, value, key, code, id, type }
-    // prioriza 'label' se existir
     return (
       (p as any).label ??
       (p as any).name ??
@@ -71,8 +64,6 @@ function pickProcedureRaw(a: any) {
       null
     );
   }
-
-  // 4) nomes alternativos usados por alguns DTOs
   return (
     a?.procedureLabel ??
     a?.procedure_label ??
@@ -84,30 +75,19 @@ function pickProcedureRaw(a: any) {
   );
 }
 
-// resolve o label final (usa mapa oficial; senão humaniza)
 function resolveProcedureLabel(raw: unknown): string {
   const s = String(raw ?? "").trim();
   if (!s) return "Procedimento";
-
-  // já é um label oficial?
   const officialLabels = Object.values(PROCEDURE_LABEL) as string[];
   if (officialLabels.includes(s)) return s;
-
-  // é a CHAVE do enum? (ex.: "AVALIACAO_CLINICA")
   // @ts-ignore
   if (PROCEDURE_LABEL[s]) {
     // @ts-ignore
     return PROCEDURE_LABEL[s];
   }
-
-  // fallback: humaniza "AVALIACAO_CLINICA" -> "Avaliacao clinica"
-  return s
-    .toLowerCase()
-    .replace(/_/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase());
+  return s.toLowerCase().replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-// ⚠️ teu DTO envia 'dateTime'
 function pickDateRaw(a: any): AnyDate {
   return a?.dateTime ?? a?.appointmentDate ?? a?.appointment_date ?? a?.datetime ?? a?.date_time ?? null;
 }
@@ -119,18 +99,16 @@ export default function MyAppointments() {
   const [error, setError] = useState("");
   const [openId, setOpenId] = useState<string | number | null>(null);
   const navigate = useNavigate();
+
   useEffect(() => {
     (async () => {
       try {
         const data = await fetchMyAppointments();
-
-        // ordena por data; sem data vai ao fim
         (data as any[]).sort((a, b) => {
           const da = toDate(pickDateRaw(a))?.getTime() ?? Number.POSITIVE_INFINITY;
           const db = toDate(pickDateRaw(b))?.getTime() ?? Number.POSITIVE_INFINITY;
           return da - db;
         });
-
         setItems(data as any);
       } catch (e: any) {
         if (e?.response?.status === 401) {
@@ -146,8 +124,8 @@ export default function MyAppointments() {
 
   if (loading) {
     return (
-      <div className="p-6 max-w-4xl space-y-3">
-        <div className="flex items-center justify-between mb-4">
+      <div className="px-2 sm:px-0 py-6 mx-auto w-full max-w-3xl space-y-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-1">
           <div className="h-6 w-48 rounded bg-gray-200 animate-pulse" />
           <div className="h-8 w-28 rounded bg-gray-200 animate-pulse" />
         </div>
@@ -158,23 +136,24 @@ export default function MyAppointments() {
     );
   }
 
-  if (error) return <div className="p-6 text-red-600">{error}</div>;
+  if (error) return <div className="px-2 sm:px-0 py-6 mx-auto w-full max-w-3xl text-red-600">{error}</div>;
 
   return (
-    <div className="p-6 max-w-4xl">
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-semibold">Meus agendamentos</h1>
+    <div className="px-2 sm:px-0 py-6 mx-auto w-full max-w-3xl">
+      {/* Header da página responsivo */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
+        <h1 className="text-xl sm:text-2xl font-semibold">Meus agendamentos</h1>
         <Link
           to="/app/appointments/new"
-          className="inline-flex items-center gap-2 rounded-xl bg-black text-white px-4 py-2 text-sm hover:opacity-90"
+          className="inline-flex items-center gap-2 rounded-xl bg-black text-white px-4 py-2 text-sm hover:opacity-90 self-start sm:self-auto"
         >
           <span className="text-base">＋</span>
-          Novo
+          <span className="sm:whitespace-nowrap">Novo</span>
         </Link>
       </div>
 
       {items.length === 0 ? (
-        <div className="rounded-2xl border p-6 text-center">
+        <div className="rounded-2xl border bg-white p-4 sm:p-6 text-center">
           <p className="text-gray-600 mb-4">Você ainda não possui agendamentos.</p>
           <button
             onClick={() => navigate("/app/appointments/new")}
@@ -191,31 +170,35 @@ export default function MyAppointments() {
             const isOpen = openId === a.id;
 
             return (
-              <li key={a.id} className="border rounded-2xl p-4">
+              <li key={a.id} className="border rounded-2xl bg-white p-4 sm:p-5">
                 <button
                   type="button"
                   aria-expanded={isOpen}
                   onClick={() => setOpenId(isOpen ? null : (a.id as any))}
-                  className="w-full text-left flex items-center justify-between gap-3"
+                  className="w-full text-left flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between"
                 >
                   <span className="font-medium">{procLabel}</span>
-                  <span className="text-xs text-gray-500">{isOpen ? "Fechar" : "Ver detalhes"}</span>
+                  <span className="text-xs text-gray-500 self-start sm:self-auto">
+                    {isOpen ? "Fechar" : "Ver detalhes"}
+                  </span>
                 </button>
 
                 {isOpen && (
                   <div className="mt-3 pt-3 border-t">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                       <div className="text-sm text-gray-700">
                         <div>
                           <span className="font-medium">Quando:</span> {day} às {time}
                         </div>
                         {a.notes && (
-                          <div className="mt-1">
+                          <div className="mt-1 break-words">
                             <span className="font-medium">Observações:</span> {a.notes}
                           </div>
                         )}
                       </div>
-                      <StatusBadge status={(a as any).status} />
+                      <div className="self-start sm:self-auto">
+                        <StatusBadge status={(a as any).status} />
+                      </div>
                     </div>
                   </div>
                 )}

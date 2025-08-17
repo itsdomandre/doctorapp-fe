@@ -5,3 +5,7 @@
 .container-app {
   @apply max-w-[120rem] mx-auto px-4 sm:px-6 lg:px-8;
 }
+
+html, body, #root {
+  overflow-x: hidden; /* evita scroll horizontal por algum pixel “sobrando” */
+}
