@@ -19,7 +19,7 @@ export default function ActivateAccount() {
         return;
       }
       try {
-        await api.post(`/auth/activate?token=${encodeURIComponent(token)}`);
+        await api.post(`/api/auth/activate?token=${encodeURIComponent(token)}`);
         if (!cancelled) {
           setStatus("ok");
           setMessage("Conta ativada com sucesso!");
