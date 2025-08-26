@@ -31,33 +31,39 @@ export const useAuth = create<AuthState>((set, get) => ({
    * - Se NÃO houver token mas está em rota protegida: tenta /me (cookie HttpOnly)
    * - Caso contrário: só marca loading=false
    */
-  initSession: async () => {
-    set({ loading: true });
-    try {
-      const hasToken = !!localStorage.getItem(TOKEN_KEY);
-      const path = window.location.pathname;
+ initSession: async () => {
+  set({ loading: true });
+  try {
+    const hasToken = !!localStorage.getItem(TOKEN_KEY);
+    const path = window.location.pathname;
 
-      if (hasToken || isProtectedPath(path)) {
-        const { data } = await api.get("/api/auth/me");
-        set({ user: data, loading: false });
-      } else {
-        set({ user: null, loading: false });
-      }
-    } catch {
-      localStorage.removeItem(TOKEN_KEY);
+    if (hasToken || isProtectedPath(path)) {
+      const { data } = await api.get("/api/auth/me");
+      set({ user: data, loading: false });
+    } else {
       set({ user: null, loading: false });
     }
-  },
-
-  fetchMe: async () => {
-    try {
-      const { data } = await api.get("/api/auth/me");
-      set({ user: data });
-    } catch {
+  } catch (e: any) {
+    const status = e?.response?.status;
+    // Só zera token se for rejeição explícita do backend
+    if (status === 401 || status === 403) {
       localStorage.removeItem(TOKEN_KEY);
-      set({ user: null });
     }
-  },
+    set({ user: null, loading: false });
+  }
+},
+  fetchMe: async () => {
+  try {
+    const { data } = await api.get("/api/auth/me");
+    set({ user: data });
+  } catch (e: any) {
+    const status = e?.response?.status;
+    if (status === 401 || status === 403) {
+      localStorage.removeItem(TOKEN_KEY);
+    }
+    set({ user: null });
+  }
+},
 
   /** Login: guarda token se existir e SEMPRE tenta sincronizar o usuário */
   login: async ({ email, password }) => {

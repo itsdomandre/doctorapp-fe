@@ -12,6 +12,8 @@ import ForgotPasswordSent from "@/pages/ForgotPasswordSent";
 import ResetPassword from "@/pages/ResetPassword";
 import ActivateAccount from "@/pages/ActivateAccount";
 import MyAppointments from "@/pages/user/MyAppointments";
+import Patients from "@/pages/admin/Patients";
+
 
 const Login = lazy(() => import("@/pages/Login"));
 const Register = lazy(() => import("@/pages/Register"));
@@ -51,6 +53,7 @@ export const router = createBrowserRouter([
         element: <RoleRoute allowed={["ADMIN"]} />,
         children: [
           { path: "/admin", element: wrapShell(<AdminDashboard />) },
+          { path: "/admin/patients", element: wrapShell(<Patients />) },
         ],
       },
 
