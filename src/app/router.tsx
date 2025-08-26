@@ -13,6 +13,7 @@ import ResetPassword from "@/pages/ResetPassword";
 import ActivateAccount from "@/pages/ActivateAccount";
 import MyAppointments from "@/pages/user/MyAppointments";
 import Patients from "@/pages/admin/Patients";
+import Appointments from "@/pages/admin/Appointments";
 
 
 const Login = lazy(() => import("@/pages/Login"));
@@ -54,6 +55,7 @@ export const router = createBrowserRouter([
         children: [
           { path: "/admin", element: wrapShell(<AdminDashboard />) },
           { path: "/admin/patients", element: wrapShell(<Patients />) },
+          { path: "/admin/appointments", element: wrapShell(<Appointments />) },
         ],
       },
 
