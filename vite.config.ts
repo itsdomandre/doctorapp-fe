@@ -11,5 +11,16 @@ export default defineConfig({
   resolve: {
     alias: { "@": resolve(__dirname, "src") },
   },
-  server: { port: 5173, strictPort: false },
+  server: {
+    port: 5173,
+    strictPort: false,
+    host: "0.0.0.0",
+    proxy: {
+      "/api": {
+        target: "http://192.168.1.9:8080",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ""),
+      },
+    },
+  },
 });
