@@ -10,7 +10,11 @@ const Login = lazy(() => import("@/pages/Login"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 const Forbidden = lazy(() => import("@/pages/Forbidden"));
 const AdminDashboard = lazy(() => import("@/pages/admin/AdminDashboard"));
+const AdminAppointments = lazy(() => import("@/pages/admin/AdminAppointments"));
+const AdminPatients = lazy(() => import("@/pages/admin/AdminPatients"));
 const UserDashboard = lazy(() => import("@/pages/user/UserDashboard"));
+const MyAppointments = lazy(() => import("@/pages/user/MyAppointments"));
+const NewAppointment = lazy(() => import("@/pages/user/NewAppointment"));
 
 const withSuspense = (el: JSX.Element) => (
   <Suspense fallback={<div className="p-6">Carregando…</div>}>{el}</Suspense>
@@ -40,6 +44,22 @@ export const router = createBrowserRouter([
               </AppLayout>
             ),
           },
+          {
+            path: "/admin/appointments",
+            element: withSuspense(
+              <AppLayout>
+                <AdminAppointments />
+              </AppLayout>
+            ),
+          },
+          {
+            path: "/admin/patients",
+            element: withSuspense(
+              <AppLayout>
+                <AdminPatients />
+              </AppLayout>
+            ),
+          },
         ],
       },
       // Área USER (USER e ADMIN)
@@ -51,6 +71,22 @@ export const router = createBrowserRouter([
             element: withSuspense(
               <AppLayout>
                 <UserDashboard />
+              </AppLayout>
+            ),
+          },
+          {
+            path: "/app/appointments",
+            element: withSuspense(
+              <AppLayout>
+                <MyAppointments />
+              </AppLayout>
+            ),
+          },
+          {
+            path: "/app/appointments/new",
+            element: withSuspense(
+              <AppLayout>
+                <NewAppointment />
               </AppLayout>
             ),
           },

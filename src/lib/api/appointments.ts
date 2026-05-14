@@ -31,7 +31,6 @@ export async function fetchMyAppointments(params: ListMineParams) {
   const { page = 0, size = 10, status = "ALL" } = params;
   const res = await api.get<Page<Appointment>>(ENDPOINTS.listMine, {
     params: { page, size, status },
-    withCredentials: true,
   });
   return res.data;
 }
@@ -44,11 +43,11 @@ export type CreateAppointmentInput = {
 };
 
 export async function createAppointment(input: CreateAppointmentInput) {
-  const res = await api.post(ENDPOINTS.create, input, { withCredentials: true });
+  const res = await api.post(ENDPOINTS.create, input);
   return res.data;
 }
 
 export async function cancelAppointment(id: string) {
-  const res = await api.post(ENDPOINTS.cancel(id), null, { withCredentials: true });
+  const res = await api.post(ENDPOINTS.cancel(id));
   return res.data;
 }

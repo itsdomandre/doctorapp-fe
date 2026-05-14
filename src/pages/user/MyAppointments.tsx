@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { fetchMyAppointments, cancelAppointment } from "@/lib/api/appointments";
 import { Appointment } from "@/types/appointment";
 import StatusBadge from "@/components/StatusBadge";
@@ -14,7 +14,7 @@ export default function MyAppointments() {
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["myAppointments", { page, size, status }],
     queryFn: () => fetchMyAppointments({ page, size, status }),
-    keepPreviousData: true,
+    placeholderData: keepPreviousData,
   });
 
   // cancelar (opcional)

@@ -1,11 +1,13 @@
 import { useAuth } from "@/store/auth";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 type Props = { onToggleSidebar: () => void };
 
 export default function Topbar({ onToggleSidebar }: Props) {
   const { user, logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
+  const navigate = useNavigate();
 
   return (
     <header className="sticky top-0 z-40 bg-white/80 backdrop-blur border-b">
@@ -39,7 +41,7 @@ export default function Topbar({ onToggleSidebar }: Props) {
                 Dashboard
               </a>
               <button
-                onClick={() => logout()}
+                onClick={async () => { await logout(); navigate("/login", { replace: true }); }}
                 className="w-full text-left px-3 py-2 rounded hover:bg-gray-50"
               >
                 Sair

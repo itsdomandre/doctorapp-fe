@@ -23,16 +23,16 @@ test.describe("Autenticação", () => {
   });
 
   test("login como USER redireciona para /app", async ({ page }) => {
-    await page.getByLabel("Email").fill("user@test.com");
-    await page.getByLabel("Senha").fill("password123");
+    await page.getByLabel("Email").fill("andre@example.com");
+    await page.getByLabel("Senha").fill("Password123!");
     await page.getByRole("button", { name: "Entrar" }).click();
 
     await expect(page).toHaveURL("/app");
   });
 
   test("login como ADMIN redireciona para /admin", async ({ page }) => {
-    await page.getByLabel("Email").fill("admin@test.com");
-    await page.getByLabel("Senha").fill("password123");
+    await page.getByLabel("Email").fill("deise@example.com");
+    await page.getByLabel("Senha").fill("Password123!");
     await page.getByRole("button", { name: "Entrar" }).click();
 
     await expect(page).toHaveURL("/admin");
@@ -50,8 +50,8 @@ test.describe("Autenticação", () => {
 
   test("USER autenticado não acede /admin e vê 403", async ({ page }) => {
     // Faz login como USER
-    await page.getByLabel("Email").fill("user@test.com");
-    await page.getByLabel("Senha").fill("password123");
+    await page.getByLabel("Email").fill("andre@example.com");
+    await page.getByLabel("Senha").fill("Password123!");
     await page.getByRole("button", { name: "Entrar" }).click();
     await page.waitForURL("/app");
 

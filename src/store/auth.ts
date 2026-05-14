@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import api from "@/lib/api";
 
-type Role = "ADMIN" | "USER" | string;
+type Role = "ADMIN" | "USER";
 
 export type User = {
   id: string;
