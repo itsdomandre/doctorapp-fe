@@ -10,7 +10,7 @@ export default function Sidebar({ open = true }: Props) {
   const user = useAuth((s) => s.user);
   const logout = useAuth((s) => s.logout);
   const navigate = useNavigate();
-  const role = (user?.role || "USER") as "ADMIN" | "USER";
+  const role = user?.role ?? "USER";
 
   const initials = (email?: string) => (email ? email.split("@")[0].slice(0, 2).toUpperCase() : "U");
 

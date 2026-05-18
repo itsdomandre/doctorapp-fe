@@ -2,7 +2,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/store/auth";
+import { useAuth, User } from "@/store/auth";
 import api from "@/lib/api";
 
 const schema = z.object({
@@ -25,12 +25,12 @@ export default function Login() {
   const onSubmit = async (data: FormData) => {
     try {
       await api.post("/api/auth/login", data);
-      const { data: me } = await api.get("/api/auth/me");
+      const { data: me } = await api.get<User>("/api/auth/me");
       setUser(me);
       navigate(me.role === "ADMIN" ? "/admin" : "/app", { replace: true });
-    } catch (err: any) {
-      const message =
-        err.response?.status === 401 ? "Credenciais inválidas" : "Erro ao fazer login";
+    } catch (err) {
+      const status = (err as { response?: { status?: number } }).response?.status;
+      const message = status === 401 ? "Credenciais inválidas" : "Erro ao fazer login";
       setError("root", { message });
     }
   };

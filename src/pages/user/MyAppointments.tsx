@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 import { fetchMyAppointments, cancelAppointment } from "@/lib/api/appointments";
 import { Appointment } from "@/types/appointment";
 import StatusBadge from "@/components/StatusBadge";
@@ -36,13 +37,17 @@ export default function MyAppointments() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Meus Appointments</h1>
-        <a
-          href="/app/appointments/new"
+        <Link
+          to="/app/appointments/new"
           className="rounded-xl border px-3 py-2 hover:bg-gray-50"
         >
           Novo Appointment
-        </a>
+        </Link>
       </div>
+
+      {cancelMut.isError && (
+        <p className="text-red-600 text-sm">Erro ao cancelar. Tente novamente.</p>
+      )}
 
       {/* Filtros */}
       <div className="flex flex-wrap items-center gap-3">

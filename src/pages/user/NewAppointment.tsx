@@ -3,7 +3,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { createAppointment, CreateAppointmentInput } from "@/lib/api/appointments";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 const schema = z.object({
   date: z.string().min(10, "Informe a data"),
@@ -16,7 +16,7 @@ type FormData = z.infer<typeof schema>;
 export default function NewAppointment() {
   const navigate = useNavigate();
 
-  const { register, handleSubmit, formState: { errors, isSubmitting }, reset } =
+  const { register, handleSubmit, formState: { errors, isSubmitting }, reset, setError } =
     useForm<FormData>({ resolver: zodResolver(schema) });
 
   const mutation = useMutation({
@@ -25,12 +25,15 @@ export default function NewAppointment() {
       reset();
       navigate("/app/appointments", { replace: true });
     },
+    onError: () => {
+      setError("root", { message: "Erro ao criar agendamento. Tente novamente." });
+    },
   });
 
   const onSubmit = (data: FormData) => {
     mutation.mutate({
       date: data.date,
-      time: data.time,
+      time: data.time || undefined,
       specialty: data.specialty,
       reason: data.reason,
     });
@@ -64,13 +67,15 @@ export default function NewAppointment() {
           {errors.reason && <div className="text-xs text-red-600 mt-1">{errors.reason.message}</div>}
         </div>
 
+        {errors.root && <div className="text-xs text-red-600">{errors.root.message}</div>}
+
         <div className="flex gap-2">
-          <button disabled={isSubmitting || mutation.isPending} className="rounded-xl border px-4 py-2 disabled:opacity-50">
+          <button type="submit" disabled={isSubmitting || mutation.isPending} className="rounded-xl border px-4 py-2 disabled:opacity-50">
             {mutation.isPending ? "Enviando..." : "Solicitar"}
           </button>
-          <a href="/app/appointments" className="rounded-xl border px-4 py-2">
+          <Link to="/app/appointments" className="rounded-xl border px-4 py-2">
             Cancelar
-          </a>
+          </Link>
         </div>
       </form>
     </div>

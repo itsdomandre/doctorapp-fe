@@ -17,7 +17,7 @@ export default defineConfig({
     host: "0.0.0.0",
     proxy: {
       "/api": {
-        target: "http://192.168.1.9:8080",
+        target: process.env.VITE_API_TARGET ?? "http://192.168.1.9:8080",
         changeOrigin: true,
       },
     },
