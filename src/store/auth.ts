@@ -32,6 +32,7 @@ export const useAuth = create<AuthState>((set) => ({
     } catch {
       /* ignore */
     } finally {
+      localStorage.removeItem("auth_token");
       set({ user: null });
     }
   },

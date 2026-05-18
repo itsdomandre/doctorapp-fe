@@ -24,7 +24,8 @@ export default function Login() {
 
   const onSubmit = async (data: FormData) => {
     try {
-      await api.post("/api/auth/login", data);
+      const { data: token } = await api.post<string>("/api/auth/login", data);
+      localStorage.setItem("auth_token", token);
       const { data: me } = await api.get<User>("/api/auth/me");
       setUser(me);
       navigate(me.role === "ADMIN" ? "/admin" : "/app", { replace: true });

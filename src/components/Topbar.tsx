@@ -1,6 +1,6 @@
 import { useAuth } from "@/store/auth";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 type Props = { onToggleSidebar: () => void };
 
@@ -31,15 +31,15 @@ export default function Topbar({ onToggleSidebar }: Props) {
               {user.firstName ?? "User"}
             </button>
           ) : (
-            <a href="/login" className="rounded-xl border px-3 py-2">
+            <Link to="/login" className="rounded-xl border px-3 py-2">
               Entrar
-            </a>
+            </Link>
           )}
           {menuOpen && user && (
             <div className="absolute right-0 mt-2 w-48 rounded-xl border bg-white shadow p-2">
-              <a href="/" className="block px-3 py-2 rounded hover:bg-gray-50">
+              <Link to="/" className="block px-3 py-2 rounded hover:bg-gray-50">
                 Dashboard
-              </a>
+              </Link>
               <button
                 onClick={async () => { await logout(); navigate("/login", { replace: true }); }}
                 className="w-full text-left px-3 py-2 rounded hover:bg-gray-50"

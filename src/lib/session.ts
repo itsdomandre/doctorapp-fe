@@ -5,6 +5,7 @@ api.interceptors.response.use(
   (res) => res,
   (err) => {
     if (err.response?.status === 401) {
+      localStorage.removeItem("auth_token");
       useAuth.getState().setUser(null);
     }
     return Promise.reject(err);
