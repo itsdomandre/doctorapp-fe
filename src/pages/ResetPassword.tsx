@@ -54,12 +54,7 @@ export default function ResetPassword() {
       await resetPassword(token, data.newPassword, data.confirmNewPassword);
       navigate("/login?reset=success", { replace: true });
     } catch (err: any) {
-      const status = err?.response?.status;
-      const message =
-        status === 409
-          ? "Este link já foi utilizado. Solicite um novo."
-          : "Link inválido ou expirado. Solicite um novo.";
-      setError("root", { message });
+      setError("root", { message: "Link inválido, expirado ou já utilizado. Solicite um novo." });
     }
   };
 

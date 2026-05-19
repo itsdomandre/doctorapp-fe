@@ -12,7 +12,7 @@ export default function Sidebar({ open = true }: Props) {
   const navigate = useNavigate();
   const role = user?.role ?? "USER";
 
-  const initials = (email?: string) => (email ? email.split("@")[0].slice(0, 2).toUpperCase() : "U");
+  const initials = (name?: string) => (name ? name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase() : "U");
 
   async function handleLogout() {
     await logout();
@@ -24,10 +24,10 @@ export default function Sidebar({ open = true }: Props) {
       {/* Card do usuário */}
       <div className="rounded-2xl border bg-white shadow-sm p-4 flex items-center gap-3 mb-4">
         <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center text-sm font-semibold">
-          {initials(user?.email)}
+          {initials(user?.fullName)}
         </div>
         <div className="min-w-0">
-          <div className="text-sm font-medium truncate">{user?.email ?? "Usuário"}</div>
+          <div className="text-sm font-medium truncate">{user?.fullName ?? "Utilizador"}</div>
           <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] bg-gray-100 text-gray-700 mt-1">
             {role}
           </span>
