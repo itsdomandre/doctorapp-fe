@@ -39,3 +39,13 @@ export async function fetchAllUsers(page = 0, size = 10): Promise<Page<UserDTO>>
   const res = await api.get<Page<UserDTO>>("/api/users", { params: { page, size } });
   return res.data;
 }
+
+export async function updateUserRole(id: string, role: Role): Promise<UserDTO> {
+  const res = await api.patch<UserDTO>(`/api/users/${id}/role`, { role });
+  return res.data;
+}
+
+export async function fetchAllPatients(page = 0, size = 10): Promise<Page<UserDTO>> {
+  const res = await api.get<Page<UserDTO>>("/api/users/all-patients", { params: { page, size } });
+  return res.data;
+}

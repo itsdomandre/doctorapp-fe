@@ -5,10 +5,10 @@ type Role = "ADMIN" | "USER";
 
 export type User = {
   id: string;
-  firstName?: string;
-  lastName?: string;
+  fullName: string;
   email: string;
   role: Role;
+  status: string;
 };
 
 type AuthState = {
@@ -26,16 +26,10 @@ export const useAuth = create<AuthState>((set) => ({
   setUser: (u) => set({ user: u }),
 
   initialize: async () => {
-    const token = localStorage.getItem("auth_token");
-    if (!token) {
-      set({ loading: false });
-      return;
-    }
     try {
       const { data: me } = await api.get<User>("/api/auth/me");
       set({ user: me, loading: false });
     } catch {
-      localStorage.removeItem("auth_token");
       set({ user: null, loading: false });
     }
   },
@@ -46,7 +40,6 @@ export const useAuth = create<AuthState>((set) => ({
     } catch {
       /* ignore */
     } finally {
-      localStorage.removeItem("auth_token");
       set({ user: null });
     }
   },

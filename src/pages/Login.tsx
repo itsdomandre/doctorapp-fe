@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
-import { useAuth, User } from "@/store/auth";
+import { useAuth, type User } from "@/store/auth";
 import api from "@/lib/api";
 
 const schema = z.object({
@@ -35,8 +35,7 @@ export default function Login() {
 
   const onSubmit = async (data: FormData) => {
     try {
-      const { data: token } = await api.post<string>("/api/auth/login", data);
-      localStorage.setItem("auth_token", token);
+      await api.post("/api/auth/login", data);
       const { data: me } = await api.get<User>("/api/auth/me");
       setUser(me);
       navigate(me.role === "ADMIN" ? "/admin" : "/app", { replace: true });
@@ -112,6 +111,13 @@ export default function Login() {
             {isSubmitting ? "A entrar…" : "Entrar"}
           </button>
         </form>
+
+        <p className="text-center text-sm text-gray-500">
+          Não tem conta?{" "}
+          <Link to="/register" className="underline hover:text-gray-800">
+            Registar
+          </Link>
+        </p>
       </div>
     </div>
   );

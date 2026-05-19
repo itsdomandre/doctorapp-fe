@@ -28,7 +28,7 @@ export default function Topbar({ onToggleSidebar }: Props) {
               onClick={() => setMenuOpen((v) => !v)}
               className="rounded-xl border px-3 py-2"
             >
-              {user.firstName ?? "User"}
+              {user.fullName}
             </button>
           ) : (
             <Link to="/login" className="rounded-xl border px-3 py-2">

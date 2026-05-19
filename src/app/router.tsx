@@ -13,6 +13,7 @@ const ActivateAccount = lazy(() => import("@/pages/ActivateAccount"));
 const ForgotPassword = lazy(() => import("@/pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("@/pages/ResetPassword"));
 const ResendActivation = lazy(() => import("@/pages/ResendActivation"));
+const Register = lazy(() => import("@/pages/Register"));
 const AdminDashboard = lazy(() => import("@/pages/admin/AdminDashboard"));
 const AdminAppointments = lazy(() => import("@/pages/admin/AdminAppointments"));
 const AdminPatients = lazy(() => import("@/pages/admin/AdminPatients"));
@@ -32,6 +33,7 @@ export const router = createBrowserRouter([
 
   // Públicas
   { path: "/login", element: withSuspense(<Login />) },
+  { path: "/register", element: withSuspense(<Register />) },
   { path: "/activate", element: withSuspense(<ActivateAccount />) },
   { path: "/forgot-password", element: withSuspense(<ForgotPassword />) },
   { path: "/reset-password", element: withSuspense(<ResetPassword />) },

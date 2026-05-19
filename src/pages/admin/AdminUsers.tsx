@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { fetchAllUsers, type UserDTO } from "@/lib/api/users";
+import { fetchAllUsers, updateUserRole, type UserDTO, type Role } from "@/lib/api/users";
 import Pagination from "@/components/Pagination";
 
 export default function AdminUsers() {
@@ -9,6 +9,7 @@ export default function AdminUsers() {
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   useEffect(() => {
     setLoading(true);
@@ -19,6 +20,16 @@ export default function AdminUsers() {
       })
       .finally(() => setLoading(false));
   }, [page]);
+
+  async function handleRoleChange(id: string, role: Role) {
+    setUpdatingId(id);
+    try {
+      const updated = await updateUserRole(id, role);
+      setUsers((prev) => prev.map((u) => (u.id === id ? updated : u)));
+    } finally {
+      setUpdatingId(null);
+    }
+  }
 
   return (
     <div className="p-6">
@@ -58,13 +69,15 @@ export default function AdminUsers() {
                   <td className="px-4 py-3 text-gray-600">{u.email}</td>
                   <td className="px-4 py-3 text-gray-600">{u.phoneNumber ?? "—"}</td>
                   <td className="px-4 py-3">
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                      u.role === "ADMIN"
-                        ? "bg-gray-900 text-white"
-                        : "bg-gray-100 text-gray-700"
-                    }`}>
-                      {u.role}
-                    </span>
+                    <select
+                      value={u.role}
+                      disabled={updatingId === u.id}
+                      onChange={(e) => handleRoleChange(u.id, e.target.value as Role)}
+                      className="rounded-lg border border-gray-200 px-2 py-1 text-xs font-medium bg-white focus:outline-none focus:ring-2 focus:ring-gray-300 disabled:opacity-50"
+                    >
+                      <option value="USER">USER</option>
+                      <option value="ADMIN">ADMIN</option>
+                    </select>
                   </td>
                   <td className="px-4 py-3">
                     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${

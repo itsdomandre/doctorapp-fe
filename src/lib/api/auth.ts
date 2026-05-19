@@ -1,5 +1,18 @@
 import api from "@/lib/api";
 
+export type RegisterInput = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  phoneNumber: string;
+  birthdate: string;
+};
+
+export async function register(input: RegisterInput): Promise<void> {
+  await api.post("/api/auth/register", input);
+}
+
 export async function activateAccount(token: string): Promise<void> {
   await api.get("/api/auth/activate", { params: { token } });
 }
