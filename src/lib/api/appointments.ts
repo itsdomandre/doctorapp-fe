@@ -49,6 +49,27 @@ export async function fetchAllAppointments(page = 0, size = 20): Promise<Page<Ap
   return res.data;
 }
 
+export type SearchParams = {
+  patientName?: string;
+  status?: AppointmentStatus;
+  fromDate?: string;
+  toDate?: string;
+};
+
+export async function searchAppointments(params: SearchParams): Promise<Appointment[]> {
+  const res = await api.get<Appointment[]>("/api/appointment/search", { params });
+  return res.data;
+}
+
+export async function updateAppointmentStatus(
+  id: number,
+  status: AppointmentStatus,
+  doctorId?: string
+): Promise<Appointment> {
+  const res = await api.put<Appointment>(`/api/appointment/update/${id}/approve`, { status, doctorId });
+  return res.data;
+}
+
 export async function fetchPendingAppointments(): Promise<Appointment[]> {
   const res = await api.get<Appointment[]>("/api/appointment/pending");
   return res.data;
