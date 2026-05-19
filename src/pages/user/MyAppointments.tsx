@@ -36,12 +36,12 @@ export default function MyAppointments() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Meus Appointments</h1>
+        <h1 className="text-xl font-semibold">Meus Agendamentos</h1>
         <Link
           to="/app/appointments/new"
           className="rounded-xl border px-3 py-2 hover:bg-gray-50"
         >
-          Novo Appointment
+          Novo Agendamento
         </Link>
       </div>
 

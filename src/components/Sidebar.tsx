@@ -42,7 +42,7 @@ export default function Sidebar({ open = true }: Props) {
               Dashboard
             </NavLink>
             <NavLink to="/admin/appointments" className={({ isActive }) => `${linkBase} ${isActive ? linkActive : ""}`}>
-              Appointments
+              Agendamentos
             </NavLink>
             <NavLink to="/admin/patients" className={({ isActive }) => `${linkBase} ${isActive ? linkActive : ""}`}>
               Pacientes
@@ -57,7 +57,7 @@ export default function Sidebar({ open = true }: Props) {
               Dashboard
             </NavLink>
             <NavLink to="/app/appointments" className={({ isActive }) => `${linkBase} ${isActive ? linkActive : ""}`}>
-              Meus Appointments
+              Meus Agendamentos
             </NavLink>
           </>
         )}
