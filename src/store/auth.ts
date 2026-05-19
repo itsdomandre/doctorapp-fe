@@ -15,7 +15,7 @@ type AuthState = {
   user: User | null;
   loading: boolean;
   setUser: (u: User | null) => void;
-  setLoading: (v: boolean) => void;
+  initialize: () => Promise<void>;
   logout: () => Promise<void>;
 };
 
@@ -24,7 +24,21 @@ export const useAuth = create<AuthState>((set) => ({
   loading: true,
 
   setUser: (u) => set({ user: u }),
-  setLoading: (v) => set({ loading: v }),
+
+  initialize: async () => {
+    const token = localStorage.getItem("auth_token");
+    if (!token) {
+      set({ loading: false });
+      return;
+    }
+    try {
+      const { data: me } = await api.get<User>("/api/auth/me");
+      set({ user: me, loading: false });
+    } catch {
+      localStorage.removeItem("auth_token");
+      set({ user: null, loading: false });
+    }
+  },
 
   logout: async () => {
     try {
