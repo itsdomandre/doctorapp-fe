@@ -43,3 +43,18 @@ export async function fetchAvailableSlots(date: string): Promise<string[]> {
   const res = await api.get<string[]>("/api/appointment/slots", { params: { date } });
   return res.data;
 }
+
+export async function fetchAllAppointments(page = 0, size = 20): Promise<Page<Appointment>> {
+  const res = await api.get<Page<Appointment>>("/api/appointment/get-all", { params: { page, size } });
+  return res.data;
+}
+
+export async function fetchPendingAppointments(): Promise<Appointment[]> {
+  const res = await api.get<Appointment[]>("/api/appointment/pending");
+  return res.data;
+}
+
+export async function fetchTodayAppointments(page = 0, size = 20): Promise<Page<Appointment>> {
+  const res = await api.get<Page<Appointment>>("/api/appointment/today", { params: { page, size } });
+  return res.data;
+}
