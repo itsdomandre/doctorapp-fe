@@ -1,5 +1,5 @@
 import { useAuth } from "@/store/auth";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 
 type Props = { onToggleSidebar: () => void };
@@ -8,6 +8,18 @@ export default function Topbar({ onToggleSidebar }: Props) {
   const { user, logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    function handleClickOutside(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [menuOpen]);
 
   return (
     <header className="sticky top-0 z-40 bg-white/80 backdrop-blur border-b">
@@ -22,7 +34,7 @@ export default function Topbar({ onToggleSidebar }: Props) {
           </button>
           <span className="font-semibold">DoctorApp</span>
         </div>
-        <div className="relative">
+        <div className="relative" ref={menuRef}>
           {user ? (
             <button
               onClick={() => setMenuOpen((v) => !v)}
@@ -37,11 +49,15 @@ export default function Topbar({ onToggleSidebar }: Props) {
           )}
           {menuOpen && user && (
             <div className="absolute right-0 mt-2 w-48 rounded-xl border bg-white shadow p-2">
-              <Link to="/" className="block px-3 py-2 rounded hover:bg-gray-50">
+              <Link
+                to="/"
+                onClick={() => setMenuOpen(false)}
+                className="block px-3 py-2 rounded hover:bg-gray-50"
+              >
                 Dashboard
               </Link>
               <button
-                onClick={async () => { await logout(); navigate("/login", { replace: true }); }}
+                onClick={async () => { setMenuOpen(false); await logout(); navigate("/login", { replace: true }); }}
                 className="w-full text-left px-3 py-2 rounded hover:bg-gray-50"
               >
                 Sair
