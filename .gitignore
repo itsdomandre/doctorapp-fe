@@ -22,3 +22,7 @@ coverage/
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+vite.config.js
+vite.config.d.ts
+tsconfig.tsbuildinfo
+tsconfig.node.tsbuildinfo
