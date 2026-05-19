@@ -12,6 +12,7 @@ const Forbidden = lazy(() => import("@/pages/Forbidden"));
 const AdminDashboard = lazy(() => import("@/pages/admin/AdminDashboard"));
 const AdminAppointments = lazy(() => import("@/pages/admin/AdminAppointments"));
 const AdminPatients = lazy(() => import("@/pages/admin/AdminPatients"));
+const AdminCreateUser = lazy(() => import("@/pages/admin/AdminCreateUser"));
 const UserDashboard = lazy(() => import("@/pages/user/UserDashboard"));
 const MyAppointments = lazy(() => import("@/pages/user/MyAppointments"));
 const NewAppointment = lazy(() => import("@/pages/user/NewAppointment"));
@@ -57,6 +58,14 @@ export const router = createBrowserRouter([
             element: withSuspense(
               <AppLayout>
                 <AdminPatients />
+              </AppLayout>
+            ),
+          },
+          {
+            path: "/admin/users/new",
+            element: withSuspense(
+              <AppLayout>
+                <AdminCreateUser />
               </AppLayout>
             ),
           },
