@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { fetchMyAppointments, cancelAppointment } from "@/lib/api/appointments";
-import { Appointment } from "@/types/appointment";
+import { Appointment, AppointmentStatus } from "@/types/appointment";
 import StatusBadge from "@/components/StatusBadge";
 import Pagination from "@/components/Pagination";
 
@@ -10,7 +10,7 @@ export default function MyAppointments() {
   const qc = useQueryClient();
   const [page, setPage] = useState(0);
   const [size] = useState(10);
-  const [status, setStatus] = useState<string>("ALL");
+  const [status, setStatus] = useState<AppointmentStatus | "ALL">("ALL");
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["myAppointments", { page, size, status }],
@@ -20,7 +20,7 @@ export default function MyAppointments() {
 
   // cancelar (opcional)
   const cancelMut = useMutation({
-    mutationFn: (id: string) => cancelAppointment(id),
+    mutationFn: (id: number) => cancelAppointment(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["myAppointments"] });
     },
@@ -57,10 +57,11 @@ export default function MyAppointments() {
           className="rounded-xl border px-3 py-2"
         >
           <option value="ALL">Todos</option>
-          <option value="PENDING">Pendentes</option>
+          <option value="REQUESTED">Pendentes</option>
           <option value="APPROVED">Aprovados</option>
           <option value="REJECTED">Rejeitados</option>
           <option value="CANCELLED">Cancelados</option>
+          <option value="COMPLETED">Concluídos</option>
         </select>
         <button
           onClick={() => refetch()}
@@ -116,7 +117,7 @@ export default function MyAppointments() {
                   <td className="px-4 py-2">{a.reason ?? "-"}</td>
                   <td className="px-4 py-2"><StatusBadge status={a.status} /></td>
                   <td className="px-4 py-2 text-right">
-                    {(a.status === "PENDING" || a.status === "APPROVED") && (
+                    {(a.status === "REQUESTED" || a.status === "APPROVED") && (
                       <button
                         onClick={() => cancelMut.mutate(a.id)}
                         className="rounded-lg border px-2 py-1 text-sm hover:bg-gray-50"

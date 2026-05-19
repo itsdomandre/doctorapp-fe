@@ -1,53 +1,45 @@
 import api from "@/lib/api";
-import { Appointment } from "@/types/appointment";
-
-const ENDPOINTS = {
-  // GET lista dos appointments do usuário logado (com paginação e filtro de status)
-  // Edite para: "/api/appointment/my-appointments" ou outro que tiveres
-  listMine: "/api/appointment/my-appointments",
-
-  // POST criação de novo appointment (payload do form)
-  create: "/api/appointment",
-
-  // (opcional) cancelar pedido do usuário
-  cancel: (id: string) => `/api/appointment/${id}/cancel`,
-};
-
-export type ListMineParams = {
-  page?: number;   // 0-based
-  size?: number;   // itens por página
-  status?: string; // PENDING|APPROVED|REJECTED|CANCELLED|ALL
-};
+import { Appointment, AppointmentStatus, Procedure } from "@/types/appointment";
 
 export type Page<T> = {
   content: T[];
   totalElements: number;
   totalPages: number;
-  number: number;       // current page (0-based)
+  number: number;
   size: number;
 };
 
-export async function fetchMyAppointments(params: ListMineParams) {
-  const { page = 0, size = 10, status = "ALL" } = params;
-  const res = await api.get<Page<Appointment>>(ENDPOINTS.listMine, {
-    params: { page, size, status },
-  });
-  return res.data;
-}
-
-export type CreateAppointmentInput = {
-  date: string;       // yyyy-mm-dd
-  time?: string;      // HH:mm (se teu backend precisa separado)
-  specialty: string;
-  reason: string;
+export type ListMineParams = {
+  page?: number;
+  size?: number;
+  status?: AppointmentStatus | "ALL";
 };
 
-export async function createAppointment(input: CreateAppointmentInput) {
-  const res = await api.post(ENDPOINTS.create, input);
+export type CreateAppointmentInput = {
+  dateTime: string;   // "yyyy-MM-ddTHH:mm:ss"
+  procedure: Procedure;
+  notes?: string;
+};
+
+export async function fetchMyAppointments(params: ListMineParams): Promise<Page<Appointment>> {
+  const { page = 0, size = 10, status } = params;
+  const query: Record<string, unknown> = { page, size };
+  if (status && status !== "ALL") query.status = status;
+  const res = await api.get<Page<Appointment>>("/api/appointment/my-appointments", { params: query });
   return res.data;
 }
 
-export async function cancelAppointment(id: string) {
-  const res = await api.post(ENDPOINTS.cancel(id));
+export async function createAppointment(input: CreateAppointmentInput): Promise<Appointment> {
+  const res = await api.post<Appointment>("/api/appointment", input);
+  return res.data;
+}
+
+export async function cancelAppointment(id: number): Promise<Appointment> {
+  const res = await api.put<Appointment>(`/api/appointment/${id}/cancel`);
+  return res.data;
+}
+
+export async function fetchAvailableSlots(date: string): Promise<string[]> {
+  const res = await api.get<string[]>("/api/appointment/slots", { params: { date } });
   return res.data;
 }

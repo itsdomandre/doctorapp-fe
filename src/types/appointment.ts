@@ -1,12 +1,39 @@
-export type AppointmentStatus = "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED";
+export type AppointmentStatus = "REQUESTED" | "APPROVED" | "REJECTED" | "CANCELLED" | "COMPLETED";
+
+export type Procedure =
+  | "AVALIACAO_CLINICA"
+  | "DESINTOXICACAO"
+  | "HARMONIZACAO_FACIAL"
+  | "PREENCHIMENTO_FACIAL"
+  | "LASER_LAVIEEN"
+  | "LIMPEZA_DE_PELE"
+  | "PEELING_QUIMICO"
+  | "SUPLEMENTACAO_VITAMINA_INJETAVEL"
+  | "TERAPIA_CAPILAR"
+  | "TOXINA_BOTULINICA"
+  | "ULTRAFORMER";
+
+export const PROCEDURE_LABELS: Record<Procedure, string> = {
+  AVALIACAO_CLINICA: "Avaliação Clínica",
+  DESINTOXICACAO: "Desintoxicação",
+  HARMONIZACAO_FACIAL: "Harmonização Facial",
+  PREENCHIMENTO_FACIAL: "Preenchimento Facial",
+  LASER_LAVIEEN: "Laser Lavieen",
+  LIMPEZA_DE_PELE: "Limpeza de Pele",
+  PEELING_QUIMICO: "Peeling Químico",
+  SUPLEMENTACAO_VITAMINA_INJETAVEL: "Suplementação de Vitamina Injetável",
+  TERAPIA_CAPILAR: "Terapia Capilar",
+  TOXINA_BOTULINICA: "Toxina Botulínica",
+  ULTRAFORMER: "Ultraformer",
+};
 
 export type Appointment = {
-  id: string;
-  date: string;          // ISO (yyyy-mm-dd) ou datetime, conforme teu backend
-  time?: string;         // se a hora vier separada
-  datetime?: string;     // se vier combinado (ISO)
-  specialty?: string;
-  reason?: string;       // descrição curta
+  id: number;
+  patientName?: string;
+  procedure: Procedure;
+  dateTime: string; // "yyyy-MM-ddTHH:mm:ss"
   status: AppointmentStatus;
-  createdAt?: string;
+  updatedAt?: string;
+  notes?: string;
+  doctorName?: string;
 };
