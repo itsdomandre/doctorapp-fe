@@ -1,6 +1,7 @@
+import { useAuth } from "@/store/auth";
 import api from "@/lib/api";
-import { useAuth, User } from "@/store/auth";
 
+// Intercept 401 responses globally — clear session and token
 api.interceptors.response.use(
   (res) => res,
   (err) => {
@@ -11,17 +12,3 @@ api.interceptors.response.use(
     return Promise.reject(err);
   }
 );
-
-export async function bootstrapSession() {
-  const { setUser, setLoading } = useAuth.getState();
-
-  setLoading(true);
-  try {
-    const { data } = await api.get<User>("/api/auth/me", { timeout: 5000 });
-    setUser(data);
-  } catch {
-    setUser(null);
-  } finally {
-    setLoading(false);
-  }
-}
