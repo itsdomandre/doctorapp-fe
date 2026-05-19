@@ -14,14 +14,28 @@ export type AdminCreateUserInput = {
 
 export type UserDTO = {
   id: string;
-  firstName: string;
-  lastName: string;
+  fullName: string;
   email: string;
+  phoneNumber: string;
+  birthdate: string;
   role: Role;
   status: string;
 };
 
+export type Page<T> = {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  number: number;
+  size: number;
+};
+
 export async function adminCreateUser(input: AdminCreateUserInput): Promise<UserDTO> {
   const res = await api.post<UserDTO>("/api/users", input);
+  return res.data;
+}
+
+export async function fetchAllUsers(page = 0, size = 10): Promise<Page<UserDTO>> {
+  const res = await api.get<Page<UserDTO>>("/api/users", { params: { page, size } });
   return res.data;
 }

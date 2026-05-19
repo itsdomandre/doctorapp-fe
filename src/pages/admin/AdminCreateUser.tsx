@@ -28,7 +28,7 @@ export default function AdminCreateUser() {
     setError(null);
     try {
       await adminCreateUser(form);
-      navigate("/admin/patients");
+      navigate("/admin/users");
     } catch (err: any) {
       const msg =
         err?.response?.data?.errors?.[0] ??
