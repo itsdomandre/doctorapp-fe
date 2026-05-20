@@ -1,5 +1,10 @@
+import type { Procedure } from "@/types/appointment";
+
 export type AnamnesisData = {
   id?: number;
+  appointmentId?: number;
+  appointmentDate?: string;
+  procedure?: Procedure;
   hasChronicDisease?: boolean | null;
   chronicDiseaseDescription?: string | null;
   usesContinuousMedication?: boolean | null;

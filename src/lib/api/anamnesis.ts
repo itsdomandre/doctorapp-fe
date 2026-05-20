@@ -15,3 +15,13 @@ export async function createMyAnamnesis(appointmentId: number, data: AnamnesisDa
   const res = await api.post(`/api/anamnesis/my/appointment/${appointmentId}`, data);
   return res.data;
 }
+
+export async function getPatientAnamneses(patientId: string): Promise<AnamnesisData[]> {
+  const res = await api.get(`/api/anamnesis/patient/${patientId}`);
+  return res.data;
+}
+
+export async function adminUpdateAnamnesis(appointmentId: number, data: AnamnesisData): Promise<AnamnesisData> {
+  const res = await api.patch(`/api/anamnesis/appointment/${appointmentId}`, data);
+  return res.data;
+}
