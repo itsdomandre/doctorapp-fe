@@ -179,22 +179,27 @@ function MessageThread({
           ))}
         </div>
       )}
-      <div className="flex gap-2">
-        <input
-          type="text"
+      <div className="space-y-1">
+        <textarea
           value={replyText}
           onChange={(e) => onReplyChange(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && !sending && replyText.trim() && onSend()}
+          maxLength={500}
+          rows={3}
           placeholder="Escreva uma mensagem…"
-          className="flex-1 rounded-xl border px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
+          className="w-full rounded-xl border px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-gray-300"
         />
-        <button
-          onClick={onSend}
-          disabled={sending || !replyText.trim()}
-          className="rounded-xl bg-gray-900 text-white px-3 py-1.5 text-sm hover:bg-gray-700 disabled:opacity-50"
-        >
-          {sending ? "…" : "Enviar"}
-        </button>
+        <div className="flex items-center justify-between">
+          <span className={`text-xs ${replyText.length >= 500 ? "text-red-500" : "text-gray-400"}`}>
+            {replyText.length}/500
+          </span>
+          <button
+            onClick={onSend}
+            disabled={sending || !replyText.trim()}
+            className="rounded-xl bg-gray-900 text-white px-3 py-1.5 text-sm hover:bg-gray-700 disabled:opacity-50"
+          >
+            {sending ? "…" : "Enviar"}
+          </button>
+        </div>
       </div>
     </div>
   );
