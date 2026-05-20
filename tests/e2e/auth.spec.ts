@@ -48,7 +48,9 @@ test.describe("Login - validação de formulário", () => {
   });
 
   test("mostra erro de validação para email com formato inválido", async ({ page }) => {
-    await page.locator('[name="email"]').fill("nao-e-um-email");
+    // Valor com @ passa validação nativa do browser (type="email") mas falha o Zod
+    // porque não tem domínio com TLD válido
+    await page.locator('[name="email"]').fill("invalido@semdominio");
     await page.getByRole("button", { name: "Entrar" }).click();
 
     await expect(page.getByText("Email inválido")).toBeVisible();
@@ -151,7 +153,7 @@ test.describe("Register - validação de formulário", () => {
   });
 
   test("mostra erro para email com formato inválido", async ({ page }) => {
-    await page.locator('[name="email"]').fill("nao-e-email");
+    await page.locator('[name="email"]').fill("invalido@semdominio");
     await page.getByRole("button", { name: "Criar conta" }).click();
 
     await expect(page.getByText("Email inválido")).toBeVisible();
