@@ -45,4 +45,5 @@ export type Appointment = {
   notes?: string;
   doctorName?: string;
   messages: AppointmentMessage[];
+  anamnesisId?: number | null;
 };

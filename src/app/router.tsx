@@ -22,6 +22,7 @@ const AdminCreateUser = lazy(() => import("@/pages/admin/AdminCreateUser"));
 const UserDashboard = lazy(() => import("@/pages/user/UserDashboard"));
 const MyAppointments = lazy(() => import("@/pages/user/MyAppointments"));
 const NewAppointment = lazy(() => import("@/pages/user/NewAppointment"));
+const MyAnamnesis = lazy(() => import("@/pages/user/MyAnamnesis"));
 
 const withSuspense = (el: JSX.Element) => (
   <Suspense fallback={<div className="p-6">Carregando…</div>}>{el}</Suspense>
@@ -115,6 +116,14 @@ export const router = createBrowserRouter([
             element: withSuspense(
               <AppLayout>
                 <NewAppointment />
+              </AppLayout>
+            ),
+          },
+          {
+            path: "/app/appointments/:id/anamnesis",
+            element: withSuspense(
+              <AppLayout>
+                <MyAnamnesis />
               </AppLayout>
             ),
           },

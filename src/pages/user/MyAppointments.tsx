@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { fetchMyAppointments, cancelAppointment, postMessage } from "@/lib/api/appointments";
+
 import { Appointment, AppointmentMessage, AppointmentStatus, PROCEDURE_LABELS } from "@/types/appointment";
 import StatusBadge from "@/components/StatusBadge";
 import Pagination from "@/components/Pagination";
@@ -108,6 +109,16 @@ export default function MyAppointments() {
                     >
                       💬 {a.messages.length > 0 && <span className="text-xs text-gray-500">{a.messages.length}</span>}
                     </button>
+                    {a.status === "APPROVED" && (
+                      <Link
+                        to={`/app/appointments/${a.id}/anamnesis`}
+                        className={`rounded-lg border px-2 py-1 text-sm hover:bg-gray-50 ${
+                          !a.anamnesisId ? "border-amber-300 text-amber-700 bg-amber-50 hover:bg-amber-100" : ""
+                        }`}
+                      >
+                        {a.anamnesisId ? "Ver Anamnese" : "Preencher Anamnese"}
+                      </Link>
+                    )}
                     {(a.status === "REQUESTED" || a.status === "APPROVED") && (
                       <button
                         onClick={() => cancelMut.mutate(a.id)}
