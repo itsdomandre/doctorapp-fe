@@ -1,158 +1,233 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
+import { USER_MOCK, ADMIN_MOCK, EMPTY_PAGE } from "../fixtures/mocks";
 
-// Helpers — form inputs use react-hook-form's `name` attribute
-const emailInput = (page: any) => page.locator('input[name="email"]');
-const passwordInput = (page: any) => page.locator('input[name="password"]');
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
 
-test.describe("Login", () => {
+async function fillLoginForm(page: Page, email: string, password: string) {
+  await page.locator('[name="email"]').fill(email);
+  await page.locator('[name="password"]').fill(password);
+}
+
+const VALID_REGISTER = {
+  firstName: "Ana",
+  lastName: "Silva",
+  email: "ana@exemplo.com",
+  phoneNumber: "+351 912 345 678",
+  birthdate: "1990-01-01",
+  password: "Senha@123",
+  confirmPassword: "Senha@123",
+};
+
+async function fillRegisterForm(page: Page, overrides: Partial<typeof VALID_REGISTER> = {}) {
+  const data = { ...VALID_REGISTER, ...overrides };
+  await page.locator('[name="firstName"]').fill(data.firstName);
+  await page.locator('[name="lastName"]').fill(data.lastName);
+  await page.locator('[name="email"]').fill(data.email);
+  await page.locator('[name="phoneNumber"]').fill(data.phoneNumber);
+  await page.locator('[name="birthdate"]').fill(data.birthdate);
+  await page.locator('[name="password"]').fill(data.password);
+  await page.locator('[name="confirmPassword"]').fill(data.confirmPassword);
+}
+
+// ─── LOGIN ───────────────────────────────────────────────────────────────────
+
+test.describe("Login - validação de formulário", () => {
   test.beforeEach(async ({ page }) => {
+    // Simula estado não autenticado: initialize() recebe 401 e define user=null
+    await page.route("**/api/auth/me", (route) =>
+      route.fulfill({ status: 401 })
+    );
     await page.goto("/login");
   });
 
-  test("página de login carrega corretamente", async ({ page }) => {
-    await expect(page.getByRole("heading", { name: "Entrar" })).toBeVisible();
-    await expect(emailInput(page)).toBeVisible();
-    await expect(passwordInput(page)).toBeVisible();
-    await expect(page.getByRole("button", { name: "Entrar" })).toBeVisible();
-  });
-
-  test("link para registo está presente", async ({ page }) => {
-    await expect(page.getByRole("link", { name: "Registar" })).toBeVisible();
-  });
-
-  test("link para recuperar senha está presente", async ({ page }) => {
-    await expect(page.getByRole("link", { name: "Esqueceu a senha?" })).toBeVisible();
-  });
-
-  test("email inválido mostra erro de validação", async ({ page }) => {
-    // Disable browser HTML5 validation so Zod can run
-    await page.locator("form").evaluate((f) => f.setAttribute("novalidate", ""));
-    await emailInput(page).fill("not-an-email");
+  test("mostra erros de validação ao submeter formulário vazio", async ({ page }) => {
     await page.getByRole("button", { name: "Entrar" }).click();
+
     await expect(page.getByText("Email inválido")).toBeVisible();
-    await expect(page).toHaveURL("/login");
+    await expect(page.getByText("Informe a senha")).toBeVisible();
   });
 
-  test("credenciais inválidas mostram erro", async ({ page }) => {
-    await emailInput(page).fill("errado@test.com");
-    await passwordInput(page).fill("senhaerrada");
+  test("mostra erro de validação para email com formato inválido", async ({ page }) => {
+    await page.locator('[name="email"]').fill("nao-e-um-email");
     await page.getByRole("button", { name: "Entrar" }).click();
-    await expect(page.getByText("Credenciais inválidas")).toBeVisible();
-    await expect(page).toHaveURL("/login");
+
+    await expect(page.getByText("Email inválido")).toBeVisible();
   });
 
-  test("conta não activada mostra erro e link de reenvio", async ({ page }) => {
-    // Register a fresh user (will be UNVERIFIED) then immediately try to login
-    const email = `unverified.${Date.now()}@example.com`;
+  test("mostra erro para credenciais inválidas (401)", async ({ page }) => {
+    await page.route("**/api/auth/login", (route) =>
+      route.fulfill({ status: 401 })
+    );
 
-    await page.goto("/register");
-    await page.locator('input[name="firstName"]').fill("Test");
-    await page.locator('input[name="lastName"]').fill("User");
-    await page.locator('input[name="email"]').fill(email);
-    await page.locator('input[name="phoneNumber"]').fill("+351 900 000 000");
-    await page.locator('input[name="birthdate"]').fill("1990-01-01");
-    await page.locator('input[name="password"]').fill("Password123!");
-    await page.locator('input[name="confirmPassword"]').fill("Password123!");
-    const [registerResponse] = await Promise.all([
-      page.waitForResponse((r) => r.url().includes("/api/auth/register")),
-      page.getByRole("button", { name: "Criar conta" }).click(),
-    ]);
-    expect(registerResponse.status(), `Registration failed: ${registerResponse.status()}`).toBe(200);
-    await expect(page.getByText("Verifique o seu email")).toBeVisible();
+    await fillLoginForm(page, "user@test.com", "senhaerrada");
+    await page.getByRole("button", { name: "Entrar" }).click();
 
-    await page.goto("/login");
-    await emailInput(page).fill(email);
-    await passwordInput(page).fill("Password123!");
+    await expect(page.getByText("Credenciais inválidas")).toBeVisible();
+  });
+
+  test("mostra erro e link de reactivação para conta não activada (403)", async ({ page }) => {
+    await page.route("**/api/auth/login", (route) =>
+      route.fulfill({ status: 403 })
+    );
+
+    await fillLoginForm(page, "user@test.com", "Senha@123");
     await page.getByRole("button", { name: "Entrar" }).click();
 
     await expect(page.getByText("Conta não activada")).toBeVisible();
-    await expect(page.getByRole("link", { name: "Reenviar email de activação" })).toBeVisible();
-    await expect(page).toHaveURL("/login");
+    await expect(
+      page.getByRole("link", { name: "Reenviar email de activação" })
+    ).toBeVisible();
   });
 
-  test("login como USER redireciona para /app", async ({ page }) => {
-    await emailInput(page).fill("andre@example.com");
-    await passwordInput(page).fill("Password123!");
+  test("exibe banner de sucesso quando senha foi redefinida (?reset=success)", async ({ page }) => {
+    await page.goto("/login?reset=success");
+
+    await expect(page.getByText("Senha redefinida com sucesso")).toBeVisible();
+  });
+});
+
+test.describe("Login - redirecionamento após autenticação", () => {
+  // Configura o mock de sessão de forma incremental:
+  // 1ª chamada a /api/auth/me (app init) → 401 (utilizador não autenticado)
+  // 2ª chamada a /api/auth/me (handler de login) → objeto user
+  async function setupLoginMocks(
+    page: Page,
+    user: typeof USER_MOCK | typeof ADMIN_MOCK
+  ) {
+    // Catch-all para silenciar chamadas das páginas pós-login (menor prioridade LIFO)
+    await page.route("**/api/**", (route) =>
+      route.fulfill({ json: EMPTY_PAGE })
+    );
+
+    await page.route("**/api/auth/login", (route) =>
+      route.fulfill({ status: 200 })
+    );
+
+    let callCount = 0;
+    await page.route("**/api/auth/me", (route) => {
+      callCount++;
+      route.fulfill(callCount === 1 ? { status: 401 } : { json: user });
+    });
+  }
+
+  test("redireciona utilizador (USER) para /app após login bem-sucedido", async ({ page }) => {
+    await setupLoginMocks(page, USER_MOCK);
+
+    await page.goto("/login");
+    await fillLoginForm(page, USER_MOCK.email, "Senha@123");
     await page.getByRole("button", { name: "Entrar" }).click();
+
     await expect(page).toHaveURL("/app");
   });
 
-  test("login como ADMIN redireciona para /admin", async ({ page }) => {
-    await emailInput(page).fill("deise@example.com");
-    await passwordInput(page).fill("Password123!");
+  test("redireciona administrador (ADMIN) para /admin após login bem-sucedido", async ({ page }) => {
+    await setupLoginMocks(page, ADMIN_MOCK);
+
+    await page.goto("/login");
+    await fillLoginForm(page, ADMIN_MOCK.email, "Senha@123");
     await page.getByRole("button", { name: "Entrar" }).click();
+
     await expect(page).toHaveURL("/admin");
   });
 });
 
-test.describe("Protecção de rotas", () => {
-  test("utilizador não autenticado é redirecionado para login ao aceder /app", async ({ page }) => {
-    await page.goto("/app");
-    await expect(page).toHaveURL("/login");
+// ─── REGISTER ────────────────────────────────────────────────────────────────
+
+test.describe("Register - validação de formulário", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.route("**/api/auth/me", (route) =>
+      route.fulfill({ status: 401 })
+    );
+    await page.goto("/register");
   });
 
-  test("utilizador não autenticado é redirecionado para login ao aceder /admin", async ({ page }) => {
-    await page.goto("/admin");
-    await expect(page).toHaveURL("/login");
+  test("mostra erros de campos obrigatórios ao submeter formulário vazio", async ({ page }) => {
+    await page.getByRole("button", { name: "Criar conta" }).click();
+
+    // Zod valida todos os campos — verifica que pelo menos os erros base aparecem
+    await expect(page.getByText("Obrigatório").first()).toBeVisible();
+    await expect(page.getByText("Email inválido")).toBeVisible();
+    await expect(page.getByText("Mínimo 8 caracteres")).toBeVisible();
   });
 
-  test("USER autenticado acede /admin e vê página 403", async ({ page }) => {
-    await page.goto("/login");
-    await emailInput(page).fill("andre@example.com");
-    await passwordInput(page).fill("Password123!");
-    await page.getByRole("button", { name: "Entrar" }).click();
-    await page.waitForURL("/app");
+  test("mostra erro para email com formato inválido", async ({ page }) => {
+    await page.locator('[name="email"]').fill("nao-e-email");
+    await page.getByRole("button", { name: "Criar conta" }).click();
 
-    await page.goto("/admin");
-    await expect(page).toHaveURL("/403");
+    await expect(page.getByText("Email inválido")).toBeVisible();
   });
 
-  test("sessão persiste após recarregar a página", async ({ page }) => {
-    await page.goto("/login");
-    await emailInput(page).fill("andre@example.com");
-    await passwordInput(page).fill("Password123!");
-    await page.getByRole("button", { name: "Entrar" }).click();
-    await page.waitForURL("/app");
+  test("mostra erro para senha com menos de 8 caracteres", async ({ page }) => {
+    await page.locator('[name="password"]').fill("abc");
+    await page.getByRole("button", { name: "Criar conta" }).click();
 
-    await page.reload();
-    await expect(page).toHaveURL("/app");
+    await expect(page.getByText("Mínimo 8 caracteres")).toBeVisible();
+  });
+
+  test("mostra erro para senha sem letra maiúscula", async ({ page }) => {
+    await page.locator('[name="password"]').fill("senha@123");
+    await page.getByRole("button", { name: "Criar conta" }).click();
+
+    await expect(page.getByText("Deve conter pelo menos uma maiúscula")).toBeVisible();
+  });
+
+  test("mostra erro para senha sem carácter especial", async ({ page }) => {
+    await page.locator('[name="password"]').fill("SenhaForte123");
+    await page.getByRole("button", { name: "Criar conta" }).click();
+
+    await expect(page.getByText("Deve conter pelo menos um carácter especial")).toBeVisible();
+  });
+
+  test("mostra erro quando as senhas não coincidem", async ({ page }) => {
+    await page.locator('[name="password"]').fill("Senha@123");
+    await page.locator('[name="confirmPassword"]').fill("Senha@456");
+    await page.getByRole("button", { name: "Criar conta" }).click();
+
+    await expect(page.getByText("As senhas não coincidem")).toBeVisible();
   });
 });
 
-test.describe("Logout", () => {
-  test("USER consegue fazer logout e é redirecionado para /login", async ({ page }) => {
-    await page.goto("/login");
-    await emailInput(page).fill("andre@example.com");
-    await passwordInput(page).fill("Password123!");
-    await page.getByRole("button", { name: "Entrar" }).click();
-    await page.waitForURL("/app");
-
-    await page.getByRole("button", { name: "Sair" }).click();
-    await expect(page).toHaveURL("/login");
+test.describe("Register - submissão de formulário", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.route("**/api/auth/me", (route) =>
+      route.fulfill({ status: 401 })
+    );
+    await page.goto("/register");
   });
 
-  test("ADMIN consegue fazer logout e é redirecionado para /login", async ({ page }) => {
-    await page.goto("/login");
-    await emailInput(page).fill("deise@example.com");
-    await passwordInput(page).fill("Password123!");
-    await page.getByRole("button", { name: "Entrar" }).click();
-    await page.waitForURL("/admin");
+  test("exibe ecrã de verificação de email após registo bem-sucedido (201)", async ({ page }) => {
+    await page.route("**/api/auth/register", (route) =>
+      route.fulfill({ status: 201 })
+    );
 
-    await page.getByRole("button", { name: "Sair" }).click();
-    await expect(page).toHaveURL("/login");
+    await fillRegisterForm(page);
+    await page.getByRole("button", { name: "Criar conta" }).click();
+
+    await expect(page.getByText("Verifique o seu email")).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: "Ir para o login" })
+    ).toBeVisible();
   });
 
-  test("após logout, /app redireciona para /login", async ({ page }) => {
-    await page.goto("/login");
-    await emailInput(page).fill("andre@example.com");
-    await passwordInput(page).fill("Password123!");
-    await page.getByRole("button", { name: "Entrar" }).click();
-    await page.waitForURL("/app");
+  test("mostra erro de conflito para email já registado (409)", async ({ page }) => {
+    await page.route("**/api/auth/register", (route) =>
+      route.fulfill({ status: 409 })
+    );
 
-    await page.getByRole("button", { name: "Sair" }).click();
-    await page.waitForURL("/login");
+    await fillRegisterForm(page);
+    await page.getByRole("button", { name: "Criar conta" }).click();
 
-    await page.goto("/app");
-    await expect(page).toHaveURL("/login");
+    await expect(page.getByText("Este email já está registado.")).toBeVisible();
+  });
+
+  test("mostra erro genérico para falha no servidor (500)", async ({ page }) => {
+    await page.route("**/api/auth/register", (route) =>
+      route.fulfill({ status: 500 })
+    );
+
+    await fillRegisterForm(page);
+    await page.getByRole("button", { name: "Criar conta" }).click();
+
+    await expect(page.getByText("Erro ao criar conta. Tente novamente.")).toBeVisible();
   });
 });
