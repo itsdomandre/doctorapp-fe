@@ -1,5 +1,13 @@
 export type AppointmentStatus = "REQUESTED" | "APPROVED" | "REJECTED" | "CANCELLED" | "COMPLETED";
 
+export type AppointmentMessage = {
+  id: number;
+  authorName: string;
+  role: "ADMIN" | "USER";
+  content: string;
+  createdAt: string;
+};
+
 export type Procedure =
   | "AVALIACAO_CLINICA"
   | "DESINTOXICACAO"
@@ -36,4 +44,5 @@ export type Appointment = {
   updatedAt?: string;
   notes?: string;
   doctorName?: string;
+  messages: AppointmentMessage[];
 };

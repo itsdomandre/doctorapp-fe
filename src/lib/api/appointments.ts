@@ -1,5 +1,5 @@
 import api from "@/lib/api";
-import { Appointment, AppointmentStatus, Procedure } from "@/types/appointment";
+import { Appointment, AppointmentMessage, AppointmentStatus, Procedure } from "@/types/appointment";
 
 export type Page<T> = {
   content: T[];
@@ -77,5 +77,10 @@ export async function fetchPendingAppointments(): Promise<Appointment[]> {
 
 export async function fetchTodayAppointments(page = 0, size = 20): Promise<Page<Appointment>> {
   const res = await api.get<Page<Appointment>>("/api/appointment/today", { params: { page, size } });
+  return res.data;
+}
+
+export async function postMessage(appointmentId: number, content: string): Promise<AppointmentMessage> {
+  const res = await api.post<AppointmentMessage>(`/api/appointment/${appointmentId}/messages`, { content });
   return res.data;
 }
