@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { activateAccount } from "@/lib/api/auth";
 
@@ -7,8 +7,12 @@ type State = "loading" | "success" | "error";
 export default function ActivateAccount() {
   const [searchParams] = useSearchParams();
   const [state, setState] = useState<State>("loading");
+  const called = useRef(false);
 
   useEffect(() => {
+    if (called.current) return;
+    called.current = true;
+
     const token = searchParams.get("token");
     if (!token) {
       setState("error");
