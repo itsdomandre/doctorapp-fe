@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { fetchMyAppointments, cancelAppointment } from "@/lib/api/appointments";
-import { Appointment, AppointmentStatus } from "@/types/appointment";
+import { Appointment, AppointmentStatus, PROCEDURE_LABELS } from "@/types/appointment";
 import StatusBadge from "@/components/StatusBadge";
 import Pagination from "@/components/Pagination";
 
@@ -107,14 +107,14 @@ export default function MyAppointments() {
               </tr>
             )}
             {rows.map((a: Appointment) => {
-              const date = a.date || a.datetime?.slice(0, 10) || "";
-              const time = a.time || a.datetime?.slice(11, 16) || "";
+              const date = a.dateTime?.slice(0, 10) ?? "";
+              const time = a.dateTime?.slice(11, 16) ?? "";
               return (
                 <tr key={a.id}>
                   <td className="px-4 py-2">{date}</td>
                   <td className="px-4 py-2">{time}</td>
-                  <td className="px-4 py-2">{a.specialty ?? "-"}</td>
-                  <td className="px-4 py-2">{a.reason ?? "-"}</td>
+                  <td className="px-4 py-2">{PROCEDURE_LABELS[a.procedure] ?? a.procedure}</td>
+                  <td className="px-4 py-2">{a.notes ?? "-"}</td>
                   <td className="px-4 py-2"><StatusBadge status={a.status} /></td>
                   <td className="px-4 py-2 text-right">
                     {(a.status === "REQUESTED" || a.status === "APPROVED") && (
