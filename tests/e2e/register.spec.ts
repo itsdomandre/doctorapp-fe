@@ -101,7 +101,11 @@ test.describe("Registo", () => {
 
   test("registo bem sucedido mostra ecrã de verificação de email", async ({ page }) => {
     await fillRegisterForm(page);
-    await page.getByRole("button", { name: "Criar conta" }).click();
+    const [res] = await Promise.all([
+      page.waitForResponse((r) => r.url().includes("/api/auth/register")),
+      page.getByRole("button", { name: "Criar conta" }).click(),
+    ]);
+    expect(res.status(), `Registration failed: ${res.status()}`).toBe(200);
     await expect(page.getByText("Verifique o seu email")).toBeVisible();
     await expect(page.getByText("Enviámos um link de activação")).toBeVisible();
     await expect(page.getByRole("link", { name: "Ir para o login" })).toBeVisible();
@@ -109,7 +113,11 @@ test.describe("Registo", () => {
 
   test("após registo bem sucedido, link leva ao login", async ({ page }) => {
     await fillRegisterForm(page);
-    await page.getByRole("button", { name: "Criar conta" }).click();
+    const [res] = await Promise.all([
+      page.waitForResponse((r) => r.url().includes("/api/auth/register")),
+      page.getByRole("button", { name: "Criar conta" }).click(),
+    ]);
+    expect(res.status(), `Registration failed: ${res.status()}`).toBe(200);
     await expect(page.getByRole("link", { name: "Ir para o login" })).toBeVisible();
     await page.getByRole("link", { name: "Ir para o login" }).click();
     await expect(page).toHaveURL("/login");

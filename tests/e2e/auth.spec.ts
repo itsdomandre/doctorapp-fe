@@ -53,7 +53,11 @@ test.describe("Login", () => {
     await page.locator('input[name="birthdate"]').fill("1990-01-01");
     await page.locator('input[name="password"]').fill("Password123!");
     await page.locator('input[name="confirmPassword"]').fill("Password123!");
-    await page.getByRole("button", { name: "Criar conta" }).click();
+    const [registerResponse] = await Promise.all([
+      page.waitForResponse((r) => r.url().includes("/api/auth/register")),
+      page.getByRole("button", { name: "Criar conta" }).click(),
+    ]);
+    expect(registerResponse.status(), `Registration failed: ${registerResponse.status()}`).toBe(200);
     await expect(page.getByText("Verifique o seu email")).toBeVisible();
 
     await page.goto("/login");
