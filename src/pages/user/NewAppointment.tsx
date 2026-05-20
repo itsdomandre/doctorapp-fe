@@ -24,6 +24,7 @@ export default function NewAppointment() {
   const [slots, setSlots] = useState<string[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [noSlots, setNoSlots] = useState(false);
+  const [slotsError, setSlotsError] = useState(false);
 
   const { register, handleSubmit, formState: { errors }, setValue, setError } =
     useForm<FormData>({ resolver: zodResolver(schema) });
@@ -33,6 +34,7 @@ export default function NewAppointment() {
     setValue("slot", "");
     setSlots([]);
     setNoSlots(false);
+    setSlotsError(false);
     if (!date) return;
     setLoadingSlots(true);
     try {
@@ -41,6 +43,7 @@ export default function NewAppointment() {
       setNoSlots(available.length === 0);
     } catch {
       setSlots([]);
+      setSlotsError(true);
     } finally {
       setLoadingSlots(false);
     }
@@ -85,6 +88,8 @@ export default function NewAppointment() {
           <label className="text-sm font-medium text-gray-700">Horário</label>
           {loadingSlots ? (
             <p className="mt-1 text-sm text-gray-500">A carregar horários…</p>
+          ) : slotsError ? (
+            <p className="mt-1 text-sm text-red-600">Erro ao carregar horários. Tente novamente.</p>
           ) : noSlots ? (
             <p className="mt-1 text-sm text-red-600">Sem horários disponíveis para esta data.</p>
           ) : (
