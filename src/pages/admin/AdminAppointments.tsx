@@ -28,12 +28,14 @@ export default function AdminAppointments() {
     queryKey: ["appointments", "week", weekFromStr],
     queryFn: () => searchAppointments({ fromDate: weekFromStr, toDate: weekToStr }),
     staleTime: 30_000,
+    retry: false,
   });
 
   const pendingQ = useQuery({
     queryKey: ["appointments", "pending"],
     queryFn: fetchPendingAppointments,
     staleTime: 30_000,
+    retry: false,
   });
 
   return (

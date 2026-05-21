@@ -44,6 +44,7 @@ export default function NewAppointment() {
     queryKey: ["appointment-availability", monthStr],
     queryFn: () => fetchMonthlyAvailability(monthStr),
     staleTime: 60_000,
+    retry: false,
   });
 
   const slotsQ = useQuery({

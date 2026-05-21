@@ -51,13 +51,15 @@ export default function CalendarPicker({
     return `${y}-${m}-${d}`;
   }
 
+  const availabilityKnown = Object.keys(availability).length > 0;
+
   function isDisabled(day: number): boolean {
     const dateStr = toDateStr(day);
     const date = parseISO(dateStr);
-    // Past day, Saturday, or no available slots
     if (isBefore(date, today)) return true;
     if (getDay(date) === 6) return true;
-    if (!availability[dateStr]) return true;
+    // Only filter by slot count when the backend returned availability data
+    if (availabilityKnown && !availability[dateStr]) return true;
     return false;
   }
 
