@@ -1,10 +1,14 @@
+import { useState } from "react";
 import { useQueries } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { fetchPendingAppointments, fetchTodayAppointments, fetchAllAppointments } from "@/lib/api/appointments";
-import { PROCEDURE_LABELS } from "@/types/appointment";
+import { Appointment, PROCEDURE_LABELS } from "@/types/appointment";
 import StatusBadge from "@/components/StatusBadge";
+import AppointmentSlidePanel from "@/components/AppointmentSlidePanel";
 
 export default function AdminDashboard() {
+  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
+
   const [pendingQ, todayQ, allQ] = useQueries({
     queries: [
       { queryKey: ["appointments", "pending"], queryFn: fetchPendingAppointments },
@@ -71,7 +75,11 @@ export default function AdminDashboard() {
             </thead>
             <tbody className="divide-y divide-gray-100">
               {pendingQ.data!.map((a) => (
-                <tr key={a.id} className="hover:bg-gray-50">
+                <tr
+                  key={a.id}
+                  onClick={() => setSelectedAppointment(a)}
+                  className="hover:bg-gray-50 cursor-pointer"
+                >
                   <td className="px-4 py-2">{a.patientName ?? "—"}</td>
                   <td className="px-4 py-2">{PROCEDURE_LABELS[a.procedure] ?? a.procedure}</td>
                   <td className="px-4 py-2">{formatDateTime(a.dateTime)}</td>
@@ -82,6 +90,11 @@ export default function AdminDashboard() {
           </table>
         )}
       </div>
+      <AppointmentSlidePanel
+        appointment={selectedAppointment}
+        onClose={() => setSelectedAppointment(null)}
+        onAppointmentUpdate={setSelectedAppointment}
+      />
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { startOfWeek, format, addDays } from "date-fns";
 import {
@@ -38,6 +38,21 @@ export default function AdminAppointments() {
     retry: false,
   });
 
+  // Merge pending appointments into calendar data.
+  // searchAppointments may fail (backend lower(bytea) bug) — pending ones
+  // are always fetched separately and must not be silently dropped from the grid.
+  const calendarAppointments = useMemo(() => {
+    const weekAppts = weekQ.data ?? [];
+    const pending = pendingQ.data ?? [];
+    const weekApptIds = new Set(weekAppts.map((a) => a.id));
+    const pendingInWeek = pending.filter((a) => {
+      if (weekApptIds.has(a.id)) return false;
+      const apptDate = a.dateTime.slice(0, 10);
+      return apptDate >= weekFromStr && apptDate <= weekToStr;
+    });
+    return [...weekAppts, ...pendingInWeek];
+  }, [weekQ.data, pendingQ.data, weekFromStr, weekToStr]);
+
   return (
     <div className="p-6 space-y-4">
       {/* View toggle */}
@@ -64,12 +79,12 @@ export default function AdminAppointments() {
 
       {view === "calendar" ? (
         <WeeklyCalendar
-          appointments={weekQ.data ?? []}
+          appointments={calendarAppointments}
           weekStart={weekStart}
           onWeekChange={setWeekStart}
           onAppointmentClick={setSelectedAppointment}
           pendingCount={pendingQ.data?.length}
-          isLoading={weekQ.isLoading}
+          isLoading={weekQ.isLoading && pendingQ.isLoading}
         />
       ) : (
         <AppointmentsListView onAppointmentClick={setSelectedAppointment} />
