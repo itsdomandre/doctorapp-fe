@@ -1,17 +1,23 @@
 import { useState } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
-import { createAppointment, fetchAvailableSlots } from "@/lib/api/appointments";
-import { PROCEDURE_LABELS, Procedure } from "@/types/appointment";
+import { format, startOfMonth, parseISO } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { useNavigate, Link } from "react-router-dom";
+import {
+  createAppointment,
+  fetchAvailableSlots,
+  fetchMonthlyAvailability,
+} from "@/lib/api/appointments";
+import { PROCEDURE_LABELS, Procedure } from "@/types/appointment";
+import CalendarPicker from "@/components/CalendarPicker";
+import TimeSlotGrid from "@/components/TimeSlotGrid";
 
 const PROCEDURES = Object.keys(PROCEDURE_LABELS) as Procedure[];
 
 const schema = z.object({
-  date: z.string().min(10, "Selecione a data"),
-  slot: z.string().min(1, "Selecione um horário"),
   procedure: z.enum(PROCEDURES as [Procedure, ...Procedure[]], {
     errorMap: () => ({ message: "Selecione um procedimento" }),
   }),
@@ -21,133 +27,157 @@ type FormData = z.infer<typeof schema>;
 
 export default function NewAppointment() {
   const navigate = useNavigate();
-  const [slots, setSlots] = useState<string[]>([]);
-  const [loadingSlots, setLoadingSlots] = useState(false);
-  const [noSlots, setNoSlots] = useState(false);
-  const [slotsError, setSlotsError] = useState(false);
+  const [currentMonth, setCurrentMonth] = useState(() => startOfMonth(new Date()));
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
 
-  const { register, handleSubmit, formState: { errors }, setValue, setError } =
-    useForm<FormData>({ resolver: zodResolver(schema) });
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    setError,
+  } = useForm<FormData>({ resolver: zodResolver(schema) });
 
-  async function handleDateChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const date = e.target.value;
-    setValue("slot", "");
-    setSlots([]);
-    setNoSlots(false);
-    setSlotsError(false);
-    if (!date) return;
-    setLoadingSlots(true);
-    try {
-      const available = await fetchAvailableSlots(date);
-      setSlots(available);
-      setNoSlots(available.length === 0);
-    } catch {
-      setSlots([]);
-      setSlotsError(true);
-    } finally {
-      setLoadingSlots(false);
-    }
+  const monthStr = format(currentMonth, "yyyy-MM");
+
+  const availabilityQ = useQuery({
+    queryKey: ["appointment-availability", monthStr],
+    queryFn: () => fetchMonthlyAvailability(monthStr),
+    staleTime: 60_000,
+  });
+
+  const slotsQ = useQuery({
+    queryKey: ["appointment-slots", selectedDate],
+    queryFn: () => fetchAvailableSlots(selectedDate!),
+    enabled: !!selectedDate,
+    staleTime: 30_000,
+  });
+
+  function handleDateSelect(date: string) {
+    setSelectedDate(date);
+    setSelectedSlot(null);
+  }
+
+  function handleMonthChange(newMonth: Date) {
+    setCurrentMonth(newMonth);
+    setSelectedDate(null);
+    setSelectedSlot(null);
   }
 
   const mutation = useMutation({
     mutationFn: createAppointment,
     onSuccess: () => navigate("/app/appointments", { replace: true }),
-    onError: () => setError("root", { message: "Erro ao criar agendamento. Tente novamente." }),
+    onError: () =>
+      setError("root", { message: "Erro ao criar agendamento. Tente novamente." }),
   });
 
   const onSubmit = (data: FormData) => {
+    if (!selectedDate || !selectedSlot) return;
     mutation.mutate({
-      dateTime: `${data.date}T${data.slot}:00`,
+      dateTime: `${selectedDate}T${selectedSlot}:00`,
       procedure: data.procedure,
       notes: data.notes || undefined,
     });
   };
 
-  const today = new Date().toISOString().slice(0, 10);
+  const formattedDate = selectedDate
+    ? format(parseISO(selectedDate), "EEEE, d 'de' MMMM", { locale: ptBR })
+    : null;
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-xl font-semibold">Novo Agendamento</h1>
+    <div className="space-y-5 max-w-lg">
+      <div>
+        <h1 className="text-xl font-semibold">Novo Agendamento</h1>
+        <p className="text-sm text-gray-500 mt-1">
+          Selecione um dia disponível e escolha o horário.
+        </p>
+      </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4 max-w-xl">
-        {/* Data */}
-        <div>
-          <label className="text-sm font-medium text-gray-700">Data</label>
-          <input
-            type="date"
-            min={today}
-            {...register("date")}
-            onChange={handleDateChange}
-            className="mt-1 w-full rounded-xl border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
+      {/* Calendar */}
+      <div className="rounded-2xl border bg-white shadow-sm p-5">
+        <CalendarPicker
+          selectedDate={selectedDate}
+          onDateSelect={handleDateSelect}
+          month={currentMonth}
+          onMonthChange={handleMonthChange}
+          availability={availabilityQ.data ?? {}}
+          loading={availabilityQ.isLoading}
+        />
+      </div>
+
+      {/* Time slots */}
+      {selectedDate && (
+        <div className="rounded-2xl border bg-white shadow-sm p-5 space-y-3">
+          <p className="text-sm font-semibold text-gray-800 capitalize">{formattedDate}</p>
+          <TimeSlotGrid
+            slots={slotsQ.data ?? []}
+            selectedSlot={selectedSlot}
+            onSlotSelect={setSelectedSlot}
+            loading={slotsQ.isLoading}
           />
-          {errors.date && <p className="text-xs text-red-600 mt-1">{errors.date.message}</p>}
         </div>
+      )}
 
-        {/* Horário */}
-        <div>
-          <label className="text-sm font-medium text-gray-700">Horário</label>
-          {loadingSlots ? (
-            <p className="mt-1 text-sm text-gray-500">A carregar horários…</p>
-          ) : slotsError ? (
-            <p className="mt-1 text-sm text-red-600">Erro ao carregar horários. Tente novamente.</p>
-          ) : noSlots ? (
-            <p className="mt-1 text-sm text-red-600">Sem horários disponíveis para esta data.</p>
-          ) : (
+      {/* Details form — only shown after date + slot are picked */}
+      {selectedDate && selectedSlot && (
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="rounded-2xl border bg-white shadow-sm p-5 space-y-4"
+        >
+          <p className="text-sm font-semibold text-gray-800">Detalhes do agendamento</p>
+
+          <div>
+            <label className="text-sm font-medium text-gray-700">Procedimento</label>
             <select
-              {...register("slot")}
-              disabled={slots.length === 0}
-              className="mt-1 w-full rounded-xl border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300 disabled:opacity-50"
+              {...register("procedure")}
+              defaultValue=""
+              className="mt-1 w-full rounded-xl border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
             >
-              <option value="">Selecione um horário</option>
-              {slots.map((s) => (
-                <option key={s} value={s}>{s}</option>
+              <option value="" disabled>
+                Selecione um procedimento
+              </option>
+              {PROCEDURES.map((p) => (
+                <option key={p} value={p}>
+                  {PROCEDURE_LABELS[p]}
+                </option>
               ))}
             </select>
-          )}
-          {errors.slot && <p className="text-xs text-red-600 mt-1">{errors.slot.message}</p>}
-        </div>
+            {errors.procedure && (
+              <p className="text-xs text-red-600 mt-1">{errors.procedure.message}</p>
+            )}
+          </div>
 
-        {/* Procedimento */}
-        <div>
-          <label className="text-sm font-medium text-gray-700">Procedimento</label>
-          <select
-            {...register("procedure")}
-            className="mt-1 w-full rounded-xl border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
-          >
-            <option value="">Selecione um procedimento</option>
-            {PROCEDURES.map((p) => (
-              <option key={p} value={p}>{PROCEDURE_LABELS[p]}</option>
-            ))}
-          </select>
-          {errors.procedure && <p className="text-xs text-red-600 mt-1">{errors.procedure.message}</p>}
-        </div>
+          <div>
+            <label className="text-sm font-medium text-gray-700">
+              Notas <span className="text-gray-400">(opcional)</span>
+            </label>
+            <textarea
+              {...register("notes")}
+              rows={3}
+              placeholder="Informações adicionais para o médico"
+              className="mt-1 w-full rounded-xl border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
+            />
+          </div>
 
-        {/* Notas */}
-        <div>
-          <label className="text-sm font-medium text-gray-700">Notas <span className="text-gray-400">(opcional)</span></label>
-          <textarea
-            {...register("notes")}
-            rows={3}
-            className="mt-1 w-full rounded-xl border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
-            placeholder="Informações adicionais para o médico"
-          />
-        </div>
+          {errors.root && <p className="text-sm text-red-600">{errors.root.message}</p>}
 
-        {errors.root && <p className="text-sm text-red-600">{errors.root.message}</p>}
-
-        <div className="flex gap-2">
-          <button
-            type="submit"
-            disabled={mutation.isPending}
-            className="rounded-xl bg-gray-900 text-white px-4 py-2 text-sm hover:bg-gray-700 disabled:opacity-50"
-          >
-            {mutation.isPending ? "A enviar…" : "Solicitar agendamento"}
-          </button>
-          <Link to="/app/appointments" className="rounded-xl border px-4 py-2 text-sm hover:bg-gray-100">
-            Cancelar
-          </Link>
-        </div>
-      </form>
+          <div className="flex gap-2">
+            <button
+              type="submit"
+              disabled={mutation.isPending}
+              className="rounded-xl bg-gray-900 text-white px-4 py-2 text-sm hover:bg-gray-700 disabled:opacity-50"
+            >
+              {mutation.isPending ? "A enviar…" : "Solicitar agendamento"}
+            </button>
+            <Link
+              to="/app/appointments"
+              className="rounded-xl border px-4 py-2 text-sm hover:bg-gray-100"
+            >
+              Cancelar
+            </Link>
+          </div>
+        </form>
+      )}
     </div>
   );
 }

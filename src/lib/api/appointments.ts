@@ -44,6 +44,11 @@ export async function fetchAvailableSlots(date: string): Promise<string[]> {
   return res.data;
 }
 
+export async function fetchMonthlyAvailability(month: string): Promise<Record<string, number>> {
+  const res = await api.get<Record<string, number>>("/api/appointment/monthly-availability", { params: { month } });
+  return res.data;
+}
+
 export async function fetchAllAppointments(page = 0, size = 20): Promise<Page<Appointment>> {
   const res = await api.get<Page<Appointment>>("/api/appointment/get-all", { params: { page, size } });
   return res.data;
