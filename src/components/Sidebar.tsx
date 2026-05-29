@@ -54,6 +54,12 @@ export default function Sidebar({ open = true }: Props) {
               Utilizadores
             </NavLink>
           </>
+        ) : role === "DOCTOR" ? (
+          <>
+            <NavLink to="/doctor/appointments" className={({ isActive }) => `${linkBase} ${isActive ? linkActive : ""}`}>
+              Meus Agendamentos
+            </NavLink>
+          </>
         ) : (
           <>
             <NavLink to="/app" end className={({ isActive }) => `${linkBase} ${isActive ? linkActive : ""}`}>

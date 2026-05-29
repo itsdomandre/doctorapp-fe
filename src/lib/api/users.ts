@@ -1,6 +1,6 @@
 import api from "@/lib/api";
 
-export type Role = "USER" | "ADMIN";
+export type Role = "USER" | "ADMIN" | "DOCTOR";
 
 export type AdminCreateUserInput = {
   firstName: string;
@@ -47,5 +47,10 @@ export async function updateUserRole(id: string, role: Role): Promise<UserDTO> {
 
 export async function fetchAllPatients(page = 0, size = 10): Promise<Page<UserDTO>> {
   const res = await api.get<Page<UserDTO>>("/api/users/all-patients", { params: { page, size } });
+  return res.data;
+}
+
+export async function fetchAllDoctors(page = 0, size = 100): Promise<Page<UserDTO>> {
+  const res = await api.get<Page<UserDTO>>("/api/users/doctors", { params: { page, size } });
   return res.data;
 }

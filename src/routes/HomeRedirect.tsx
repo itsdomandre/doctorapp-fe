@@ -7,5 +7,7 @@ export default function HomeRedirect() {
   if (loading) return <div className="p-6">Carregando…</div>;
   if (!user) return <Navigate to="/login" replace />;
 
-  return <Navigate to={user.role === "ADMIN" ? "/admin" : "/app"} replace />;
+  if (user.role === "ADMIN") return <Navigate to="/admin" replace />;
+  if (user.role === "DOCTOR") return <Navigate to="/doctor/appointments" replace />;
+  return <Navigate to="/app" replace />;
 }

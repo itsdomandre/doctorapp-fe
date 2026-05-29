@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Appointment, PROCEDURE_LABELS } from "@/types/appointment";
 import { updateAppointmentStatus, postMessage } from "@/lib/api/appointments";
-import { useAuth } from "@/store/auth";
+import { fetchAllDoctors } from "@/lib/api/users";
 import StatusBadge from "@/components/StatusBadge";
 
 type Props = {
@@ -19,24 +19,32 @@ export default function AppointmentSlidePanel({
   onAppointmentUpdate,
 }: Props) {
   const qc = useQueryClient();
-  const { user } = useAuth();
 
   const [pendingStatus, setPendingStatus] = useState<"APPROVED" | "REJECTED" | null>(null);
+  const [selectedDoctorId, setSelectedDoctorId] = useState("");
   const [actionNote, setActionNote] = useState("");
   const [replyText, setReplyText] = useState("");
+
+  const { data: doctors } = useQuery({
+    queryKey: ["doctors"],
+    queryFn: () => fetchAllDoctors(),
+    enabled: pendingStatus === "APPROVED",
+    staleTime: 60_000,
+  });
 
   const updateMut = useMutation({
     mutationFn: ({ status }: { status: "APPROVED" | "REJECTED"; note: string }) =>
       updateAppointmentStatus(
         appointment!.id,
         status,
-        status === "APPROVED" ? user?.id : undefined
+        status === "APPROVED" ? selectedDoctorId : undefined
       ),
     onSuccess: async (_, vars) => {
       if (vars.note.trim()) {
         await postMessage(appointment!.id, vars.note.trim());
       }
       setPendingStatus(null);
+      setSelectedDoctorId("");
       setActionNote("");
       qc.invalidateQueries({ queryKey: ["appointments"] });
       onClose();
@@ -163,6 +171,27 @@ export default function AppointmentSlidePanel({
                   <p className="text-sm font-medium text-gray-700">
                     {pendingStatus === "APPROVED" ? "Confirmar aprovação" : "Confirmar rejeição"}
                   </p>
+
+                  {pendingStatus === "APPROVED" && (
+                    <div>
+                      <label className="text-xs font-medium text-gray-600 mb-1 block">
+                        Profissional <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        value={selectedDoctorId}
+                        onChange={(e) => setSelectedDoctorId(e.target.value)}
+                        className="w-full rounded-lg border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
+                      >
+                        <option value="">Selecionar profissional…</option>
+                        {doctors?.content.map((d) => (
+                          <option key={d.id} value={d.id}>
+                            {d.fullName}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
                   <textarea
                     value={actionNote}
                     onChange={(e) => setActionNote(e.target.value)}
@@ -177,7 +206,10 @@ export default function AppointmentSlidePanel({
                   <div className="flex gap-2">
                     <button
                       onClick={() => updateMut.mutate({ status: pendingStatus, note: actionNote })}
-                      disabled={updateMut.isPending}
+                      disabled={
+                        updateMut.isPending ||
+                        (pendingStatus === "APPROVED" && !selectedDoctorId)
+                      }
                       className={[
                         "flex-1 rounded-xl py-2 text-sm font-medium text-white disabled:opacity-50 transition-colors",
                         pendingStatus === "APPROVED"
@@ -190,6 +222,7 @@ export default function AppointmentSlidePanel({
                     <button
                       onClick={() => {
                         setPendingStatus(null);
+                        setSelectedDoctorId("");
                         setActionNote("");
                       }}
                       className="rounded-xl border px-4 py-2 text-sm hover:bg-gray-100"

@@ -89,3 +89,16 @@ export async function postMessage(appointmentId: number, content: string): Promi
   const res = await api.post<AppointmentMessage>(`/api/appointment/${appointmentId}/messages`, { content });
   return res.data;
 }
+
+export async function fetchDoctorAppointments(params: ListMineParams): Promise<Page<Appointment>> {
+  const { page = 0, size = 10, status } = params;
+  const query: Record<string, unknown> = { page, size };
+  if (status && status !== "ALL") query.status = status;
+  const res = await api.get<Page<Appointment>>("/api/appointment/doctor/my-appointments", { params: query });
+  return res.data;
+}
+
+export async function completeAppointment(id: number): Promise<Appointment> {
+  const res = await api.put<Appointment>(`/api/appointment/${id}/complete`);
+  return res.data;
+}

@@ -20,6 +20,7 @@ const AdminPatients = lazy(() => import("@/pages/admin/AdminPatients"));
 const AdminUsers = lazy(() => import("@/pages/admin/AdminUsers"));
 const AdminCreateUser = lazy(() => import("@/pages/admin/AdminCreateUser"));
 const AdminAnamnesis = lazy(() => import("@/pages/admin/AdminAnamnesis"));
+const DoctorAppointments = lazy(() => import("@/pages/doctor/DoctorAppointments"));
 const UserDashboard = lazy(() => import("@/pages/user/UserDashboard"));
 const MyAppointments = lazy(() => import("@/pages/user/MyAppointments"));
 const NewAppointment = lazy(() => import("@/pages/user/NewAppointment"));
@@ -95,6 +96,20 @@ export const router = createBrowserRouter([
             element: withSuspense(
               <AppLayout>
                 <AdminAnamnesis />
+              </AppLayout>
+            ),
+          },
+        ],
+      },
+      // Área DOCTOR
+      {
+        element: <RoleRoute allowed={["DOCTOR"]} />,
+        children: [
+          {
+            path: "/doctor/appointments",
+            element: withSuspense(
+              <AppLayout>
+                <DoctorAppointments />
               </AppLayout>
             ),
           },
