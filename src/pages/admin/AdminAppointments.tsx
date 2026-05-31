@@ -242,5 +242,6 @@ function AppointmentsListView({
 function formatDateTime(dt: string) {
   if (!dt) return "—";
   const [date, time] = dt.split("T");
-  return `${date} ${time?.slice(0, 5)}`;
+  const [year, month, day] = date.split("-");
+  return `${day}/${month}/${year} ${time?.slice(0, 5)}`;
 }

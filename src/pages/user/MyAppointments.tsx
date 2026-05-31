@@ -98,7 +98,7 @@ export default function MyAppointments() {
             {rows.map((a: Appointment) => (
               <>
                 <tr key={a.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-2">{a.dateTime?.slice(0, 10) ?? ""}</td>
+                  <td className="px-4 py-2">{a.dateTime ? a.dateTime.slice(0, 10).split("-").reverse().join("/") : ""}</td>
                   <td className="px-4 py-2">{a.dateTime?.slice(11, 16) ?? ""}</td>
                   <td className="px-4 py-2">{PROCEDURE_LABELS[a.procedure] ?? a.procedure}</td>
                   <td className="px-4 py-2"><StatusBadge status={a.status} /></td>

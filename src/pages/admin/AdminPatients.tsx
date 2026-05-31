@@ -47,7 +47,7 @@ export default function AdminPatients() {
                   <td className="px-4 py-3 font-medium">{p.fullName}</td>
                   <td className="px-4 py-3 text-gray-600">{p.email}</td>
                   <td className="px-4 py-3 text-gray-600">{p.phoneNumber ?? "—"}</td>
-                  <td className="px-4 py-3 text-gray-600">{p.birthdate ?? "—"}</td>
+                  <td className="px-4 py-3 text-gray-600">{p.birthdate ? p.birthdate.split("-").reverse().join("/") : "—"}</td>
                   <td className="px-4 py-3">
                     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                       p.status === "ACTIVE"
