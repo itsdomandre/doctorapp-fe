@@ -50,6 +50,9 @@ export default function Sidebar({ open = true }: Props) {
             <NavLink to="/admin/anamnesis" className={({ isActive }) => `${linkBase} ${isActive ? linkActive : ""}`}>
               Anamneses
             </NavLink>
+            <NavLink to="/admin/patient-history" className={({ isActive }) => `${linkBase} ${isActive ? linkActive : ""}`}>
+              Histórico de Paciente
+            </NavLink>
             <NavLink to="/admin/users" className={({ isActive }) => `${linkBase} ${isActive ? linkActive : ""}`}>
               Utilizadores
             </NavLink>

@@ -102,3 +102,22 @@ export async function completeAppointment(id: number): Promise<Appointment> {
   const res = await api.put<Appointment>(`/api/appointment/${id}/complete`);
   return res.data;
 }
+
+export type PatientHistoryParams = {
+  patientId: string;
+  from?: string;
+  to?: string;
+  status?: AppointmentStatus;
+  page?: number;
+  size?: number;
+};
+
+export async function fetchPatientHistory(params: PatientHistoryParams): Promise<Page<Appointment>> {
+  const { patientId, from, to, status, page = 0, size = 10 } = params;
+  const query: Record<string, unknown> = { page, size };
+  if (from) query.from = from;
+  if (to) query.to = to;
+  if (status) query.status = status;
+  const res = await api.get<Page<Appointment>>(`/api/appointment/report/patient/${patientId}`, { params: query });
+  return res.data;
+}
