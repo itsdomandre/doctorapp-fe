@@ -25,11 +25,12 @@ export default function AppointmentSlidePanel({
   const [actionNote, setActionNote] = useState("");
   const [replyText, setReplyText] = useState("");
 
-  const { data: doctors, isLoading: doctorsLoading } = useQuery({
+  const { data: doctors, isLoading: doctorsLoading, isError: doctorsError } = useQuery({
     queryKey: ["doctors"],
     queryFn: () => fetchAllDoctors(),
     enabled: appointment?.status === "REQUESTED",
-    staleTime: 60_000,
+    staleTime: 0,
+    retry: false,
   });
 
   const updateMut = useMutation({
@@ -177,21 +178,25 @@ export default function AppointmentSlidePanel({
                       <label className="text-xs font-medium text-gray-600 mb-1 block">
                         Profissional <span className="text-red-500">*</span>
                       </label>
-                      <select
-                        value={selectedDoctorId}
-                        disabled={doctorsLoading}
-                        onChange={(e) => setSelectedDoctorId(e.target.value)}
-                        className="w-full rounded-lg border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300 disabled:opacity-50"
-                      >
-                        <option value="">
-                          {doctorsLoading ? "A carregar…" : "Selecionar profissional…"}
-                        </option>
-                        {doctors?.content.map((d) => (
-                          <option key={d.id} value={d.id}>
-                            {d.fullName}
+                      {doctorsError ? (
+                        <p className="text-xs text-red-600">Erro ao carregar profissionais.</p>
+                      ) : (
+                        <select
+                          value={selectedDoctorId}
+                          disabled={doctorsLoading}
+                          onChange={(e) => setSelectedDoctorId(e.target.value)}
+                          className="w-full rounded-lg border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300 disabled:opacity-50"
+                        >
+                          <option value="">
+                            {doctorsLoading ? "A carregar…" : doctors?.content.length === 0 ? "Nenhum profissional disponível" : "Selecionar profissional…"}
                           </option>
-                        ))}
-                      </select>
+                          {doctors?.content.map((d) => (
+                            <option key={d.id} value={d.id}>
+                              {d.fullName}
+                            </option>
+                          ))}
+                        </select>
+                      )}
                     </div>
                   )}
 
