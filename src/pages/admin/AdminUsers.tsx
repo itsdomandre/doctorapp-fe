@@ -77,6 +77,7 @@ export default function AdminUsers() {
                     >
                       <option value="USER">USER</option>
                       <option value="ADMIN">ADMIN</option>
+                      <option value="DOCTOR">DOCTOR</option>
                     </select>
                   </td>
                   <td className="px-4 py-3">
