@@ -29,6 +29,8 @@ export default function AdminUsers() {
       const updated = await updateUserRole(id, role);
       setUsers((prev) => prev.map((u) => (u.id === id ? updated : u)));
       qc.invalidateQueries({ queryKey: ["doctors"] });
+    } catch {
+      alert("Erro ao atualizar role. Tente novamente.");
     } finally {
       setUpdatingId(null);
     }

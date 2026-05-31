@@ -65,6 +65,7 @@ export default function AdminCreateUser() {
           >
             <option value="USER">USER — Paciente</option>
             <option value="ADMIN">ADMIN — Administrador</option>
+            <option value="DOCTOR">DOCTOR — Profissional</option>
           </select>
         </div>
 
