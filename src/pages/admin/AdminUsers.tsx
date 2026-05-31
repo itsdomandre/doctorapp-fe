@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { fetchAllUsers, updateUserRole, type UserDTO, type Role } from "@/lib/api/users";
 import Pagination from "@/components/Pagination";
 
 export default function AdminUsers() {
   const navigate = useNavigate();
+  const qc = useQueryClient();
   const [users, setUsers] = useState<UserDTO[]>([]);
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
@@ -26,6 +28,7 @@ export default function AdminUsers() {
     try {
       const updated = await updateUserRole(id, role);
       setUsers((prev) => prev.map((u) => (u.id === id ? updated : u)));
+      qc.invalidateQueries({ queryKey: ["doctors"] });
     } finally {
       setUpdatingId(null);
     }
