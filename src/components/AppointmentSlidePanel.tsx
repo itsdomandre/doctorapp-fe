@@ -25,10 +25,10 @@ export default function AppointmentSlidePanel({
   const [actionNote, setActionNote] = useState("");
   const [replyText, setReplyText] = useState("");
 
-  const { data: doctors } = useQuery({
+  const { data: doctors, isLoading: doctorsLoading } = useQuery({
     queryKey: ["doctors"],
     queryFn: () => fetchAllDoctors(),
-    enabled: pendingStatus === "APPROVED",
+    enabled: appointment?.status === "REQUESTED",
     staleTime: 60_000,
   });
 
@@ -179,10 +179,13 @@ export default function AppointmentSlidePanel({
                       </label>
                       <select
                         value={selectedDoctorId}
+                        disabled={doctorsLoading}
                         onChange={(e) => setSelectedDoctorId(e.target.value)}
-                        className="w-full rounded-lg border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
+                        className="w-full rounded-lg border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300 disabled:opacity-50"
                       >
-                        <option value="">Selecionar profissional…</option>
+                        <option value="">
+                          {doctorsLoading ? "A carregar…" : "Selecionar profissional…"}
+                        </option>
                         {doctors?.content.map((d) => (
                           <option key={d.id} value={d.id}>
                             {d.fullName}
