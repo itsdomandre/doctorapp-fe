@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { fetchDoctorAppointments, completeAppointment, postMessage } from "@/lib/api/appointments";
 import { Appointment, AppointmentMessage, AppointmentStatus, PROCEDURE_LABELS } from "@/types/appointment";
@@ -103,11 +104,18 @@ export default function DoctorAppointments() {
                     >
                       💬 {a.messages.length > 0 && <span className="text-xs text-gray-500">{a.messages.length}</span>}
                     </button>
+                    <Link
+                      to={`/doctor/appointments/${a.id}`}
+                      className="rounded-lg border px-2 py-1 text-sm hover:bg-gray-50"
+                    >
+                      Ver
+                    </Link>
                     {a.status === "APPROVED" && (
                       <button
                         onClick={() => completeMut.mutate(a.id)}
-                        disabled={completeMut.isPending}
-                        className="rounded-lg border border-blue-200 bg-blue-50 px-2 py-1 text-sm text-blue-700 hover:bg-blue-100 disabled:opacity-50"
+                        disabled={completeMut.isPending || !a.anamnesisId}
+                        title={!a.anamnesisId ? "Aguardando anamnese do paciente" : undefined}
+                        className="rounded-lg border border-blue-200 bg-blue-50 px-2 py-1 text-sm text-blue-700 hover:bg-blue-100 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Concluir
                       </button>

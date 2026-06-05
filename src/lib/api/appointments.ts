@@ -1,5 +1,5 @@
 import api from "@/lib/api";
-import { Appointment, AppointmentMessage, AppointmentStatus, Procedure } from "@/types/appointment";
+import { Appointment, AppointmentMessage, AppointmentStatus, DoctorNote, Procedure } from "@/types/appointment";
 
 export type Page<T> = {
   content: T[];
@@ -100,6 +100,16 @@ export async function fetchDoctorAppointments(params: ListMineParams): Promise<P
 
 export async function completeAppointment(id: number): Promise<Appointment> {
   const res = await api.put<Appointment>(`/api/appointment/${id}/complete`);
+  return res.data;
+}
+
+export async function fetchAppointmentById(id: number): Promise<Appointment> {
+  const res = await api.get<Appointment>(`/api/appointment/${id}`);
+  return res.data;
+}
+
+export async function addDoctorNote(appointmentId: number, content: string): Promise<DoctorNote> {
+  const res = await api.post<DoctorNote>(`/api/appointment/${appointmentId}/doctor-notes`, { content });
   return res.data;
 }
 

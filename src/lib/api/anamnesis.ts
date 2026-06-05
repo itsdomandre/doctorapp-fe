@@ -25,3 +25,8 @@ export async function adminUpdateAnamnesis(appointmentId: number, data: Anamnesi
   const res = await api.patch(`/api/anamnesis/appointment/${appointmentId}`, data);
   return res.data;
 }
+
+export async function getDoctorAnamnesis(appointmentId: number): Promise<AnamnesisData> {
+  const res = await api.get(`/api/anamnesis/appointment/${appointmentId}`);
+  return res.data;
+}

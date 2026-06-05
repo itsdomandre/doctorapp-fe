@@ -8,6 +8,13 @@ export type AppointmentMessage = {
   createdAt: string;
 };
 
+export type DoctorNote = {
+  id: number;
+  content: string;
+  createdAt: string;
+  doctorName: string;
+};
+
 export type Procedure =
   | "AVALIACAO_CLINICA"
   | "DESINTOXICACAO"
@@ -46,4 +53,5 @@ export type Appointment = {
   doctorName?: string;
   messages: AppointmentMessage[];
   anamnesisId?: number | null;
+  doctorNotes?: DoctorNote[];
 };
