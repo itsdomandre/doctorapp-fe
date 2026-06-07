@@ -8,7 +8,7 @@ export default function AppLayout({ children }: PropsWithChildren) {
   return (
     <div className="min-h-dvh bg-gray-50">
       <Topbar onToggleSidebar={() => setOpen((v) => !v)} />
-      <div className="container-app py-4 flex gap-4">
+      <div className="container-app py-5 flex gap-5 items-start">
         <Sidebar open={open} />
         <main className="flex-1 min-w-0">{children}</main>
       </div>
