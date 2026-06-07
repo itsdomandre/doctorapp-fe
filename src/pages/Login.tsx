@@ -38,7 +38,8 @@ export default function Login() {
       await api.post("/api/auth/login", data);
       const { data: me } = await api.get<User>("/api/auth/me");
       setUser(me);
-      navigate(me.role === "ADMIN" ? "/admin" : "/app", { replace: true });
+      const dest = me.role === "ADMIN" ? "/admin" : me.role === "DOCTOR" ? "/doctor/appointments" : "/app";
+      navigate(dest, { replace: true });
     } catch (err: any) {
       const status = err?.response?.status;
       if (status === 403) {
