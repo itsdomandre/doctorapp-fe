@@ -42,10 +42,13 @@ export default function Login() {
       navigate(dest, { replace: true });
     } catch (err: any) {
       const status = err?.response?.status;
-      if (status === 403) {
+      const body: string = err?.response?.data ?? "";
+      if (status === 403 && body.toLowerCase().includes("not verified")) {
         setError("root", { message: "Conta não activada. Verifique o seu email." });
-      } else {
+      } else if (status === 401) {
         setError("root", { message: "Credenciais inválidas." });
+      } else {
+        setError("root", { message: "Não foi possível entrar. Tente novamente." });
       }
     }
   };

@@ -21,6 +21,10 @@ const AdminUsers = lazy(() => import("@/pages/admin/AdminUsers"));
 const AdminCreateUser = lazy(() => import("@/pages/admin/AdminCreateUser"));
 const AdminAnamnesis = lazy(() => import("@/pages/admin/AdminAnamnesis"));
 const AdminPatientHistory = lazy(() => import("@/pages/admin/AdminPatientHistory"));
+const AdminFinancialDashboard = lazy(() => import("@/pages/admin/AdminFinancialDashboard"));
+const AdminReceivables = lazy(() => import("@/pages/admin/AdminReceivables"));
+const AdminPayables = lazy(() => import("@/pages/admin/AdminPayables"));
+const AdminProcedurePrices = lazy(() => import("@/pages/admin/AdminProcedurePrices"));
 const DoctorAppointments = lazy(() => import("@/pages/doctor/DoctorAppointments"));
 const DoctorAppointmentDetail = lazy(() => import("@/pages/doctor/DoctorAppointmentDetail"));
 const UserDashboard = lazy(() => import("@/pages/user/UserDashboard"));
@@ -106,6 +110,38 @@ export const router = createBrowserRouter([
             element: withSuspense(
               <AppLayout>
                 <AdminPatientHistory />
+              </AppLayout>
+            ),
+          },
+          {
+            path: "/admin/financial",
+            element: withSuspense(
+              <AppLayout>
+                <AdminFinancialDashboard />
+              </AppLayout>
+            ),
+          },
+          {
+            path: "/admin/financial/receivables",
+            element: withSuspense(
+              <AppLayout>
+                <AdminReceivables />
+              </AppLayout>
+            ),
+          },
+          {
+            path: "/admin/financial/payables",
+            element: withSuspense(
+              <AppLayout>
+                <AdminPayables />
+              </AppLayout>
+            ),
+          },
+          {
+            path: "/admin/financial/procedure-prices",
+            element: withSuspense(
+              <AppLayout>
+                <AdminProcedurePrices />
               </AppLayout>
             ),
           },
