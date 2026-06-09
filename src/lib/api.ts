@@ -1,4 +1,5 @@
 import axios from "axios";
+import { useAuth } from "@/store/auth";
 
 const api = axios.create({
   baseURL: "/",
@@ -9,8 +10,7 @@ api.interceptors.response.use(
   (res) => res,
   (err) => {
     if (err?.response?.status === 401) {
-      // JWT expired or invalid — clear local state and send to login
-      window.location.href = "/login";
+      useAuth.getState().setUser(null);
     }
     return Promise.reject(err);
   }
