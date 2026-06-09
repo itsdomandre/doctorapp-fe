@@ -1,7 +1,7 @@
 import api from "@/lib/api";
-import type { Page } from "@/lib/api/appointments";
 import type {
   FinancialEntry,
+  FinancialEntryPageResponse,
   FinancialEntryStatus,
   FinancialSummary,
   PaymentMethod,
@@ -14,25 +14,31 @@ export async function fetchFinancialSummary(): Promise<FinancialSummary> {
   return res.data;
 }
 
-export async function fetchReceivables(
-  page = 0,
-  size = 20,
-  status?: FinancialEntryStatus
-): Promise<Page<FinancialEntry>> {
-  const params: Record<string, unknown> = { page, size };
-  if (status) params.status = status;
-  const res = await api.get<Page<FinancialEntry>>("/api/financial/receivables", { params });
+export type EntryListParams = {
+  page?: number;
+  size?: number;
+  status?: FinancialEntryStatus;
+  dueDateFrom?: string;
+  dueDateTo?: string;
+};
+
+export async function fetchReceivables(params: EntryListParams = {}): Promise<FinancialEntryPageResponse> {
+  const { page = 0, size = 20, status, dueDateFrom, dueDateTo } = params;
+  const query: Record<string, unknown> = { page, size };
+  if (status) query.status = status;
+  if (dueDateFrom) query.dueDateFrom = dueDateFrom;
+  if (dueDateTo) query.dueDateTo = dueDateTo;
+  const res = await api.get<FinancialEntryPageResponse>("/api/financial/receivables", { params: query });
   return res.data;
 }
 
-export async function fetchPayables(
-  page = 0,
-  size = 20,
-  status?: FinancialEntryStatus
-): Promise<Page<FinancialEntry>> {
-  const params: Record<string, unknown> = { page, size };
-  if (status) params.status = status;
-  const res = await api.get<Page<FinancialEntry>>("/api/financial/payables", { params });
+export async function fetchPayables(params: EntryListParams = {}): Promise<FinancialEntryPageResponse> {
+  const { page = 0, size = 20, status, dueDateFrom, dueDateTo } = params;
+  const query: Record<string, unknown> = { page, size };
+  if (status) query.status = status;
+  if (dueDateFrom) query.dueDateFrom = dueDateFrom;
+  if (dueDateTo) query.dueDateTo = dueDateTo;
+  const res = await api.get<FinancialEntryPageResponse>("/api/financial/payables", { params: query });
   return res.data;
 }
 

@@ -82,6 +82,15 @@ export type FinancialEntry = {
   patientName?: string;
 };
 
+export type FinancialEntryPageResponse = {
+  content: FinancialEntry[];
+  totalElements: number;
+  totalPages: number;
+  number: number;
+  size: number;
+  filteredTotal: number;
+};
+
 export type FinancialSummary = {
   totalReceivablePending: number;
   totalReceivablePaid: number;
