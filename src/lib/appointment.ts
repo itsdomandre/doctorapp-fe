@@ -5,7 +5,7 @@ const ROOT = "/api/appointment"; // casa com @RequestMapping("/api/appointment")
 
 export async function fetchMyAppointments(): Promise<AppointmentDTO[]> {
   const { data } = await api.get(`${ROOT}/my-appointments`);
-  return data;
+  return data.content ?? data;
 }
 
 export async function fetchSlots(dateISO: string): Promise<string[]> {
@@ -14,6 +14,6 @@ export async function fetchSlots(dateISO: string): Promise<string[]> {
 }
 
 export async function createAppointment(payload: CreateAppointmentPayload): Promise<AppointmentDTO> {
-  const { data } = await api.post(`${ROOT}/create`, payload);
+  const { data } = await api.post(ROOT, payload);
   return data;
 }
